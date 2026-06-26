@@ -1,16 +1,69 @@
-# React + Vite
+# e-Urus PDK Project
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Prerequisites
 
-Currently, two official plugins are available:
+Before running this project, make sure you have installed:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js (v18 or above recommended)
+- npm (comes together with Node.js)
 
-## React Compiler
+Check the installation:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+node -v
+npm -v
+```
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Project Setup
+
+Go to the frontend folder:
+
+```bash
+cd frontend
+```
+
+Install project dependencies (first time only)
+```bash
+npm install
+```
+
+Start the development server:
+```bash
+npm run dev
+```
+
+The application will be available at:
+http://localhost:5173
+
+
+
+## Frontend Routing
+Continuation after main localhost link above : 
+| URL | Description |
+|------|-------------|
+| `/` | Login Interface |
+| `/pembantu-tadbir` | Pembantu Tadbir Dashboard |
+| `/ketua-jabatan` | Ketua Jabatan Dashboard |
+| `/ketua-bahagian` | Ketua Bahagian Dashboard |
+| `/pegawai-penyedia` | Pegawai Penyedia Laporan Dashboard |
+| `/pegawai-penyelaras` | Pegawai Penyelaras Bahagian Dashboard |
+
+---
+
+## Development Notes
+
+- This project is currently **Frontend Only**.
+- Authentication is not integrated yet.
+- Backend and database integration will be added later.
+- Dummy data is currently used for UI development.
+
+---
+
+## Current Tech Stack
+
+- React.js
+- Vite
+- React Router DOM
+- CSS
