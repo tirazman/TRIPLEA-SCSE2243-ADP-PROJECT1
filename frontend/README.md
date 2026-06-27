@@ -14,6 +14,12 @@ node -v
 npm -v
 ```
 
+Don't forget to pull member's code before start coding or push to github !!
+
+```bash
+git pull
+```
+
 ---
 
 ## Project Setup
