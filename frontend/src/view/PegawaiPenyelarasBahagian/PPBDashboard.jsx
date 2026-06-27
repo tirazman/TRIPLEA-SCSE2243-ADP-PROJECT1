@@ -1,9 +1,14 @@
 import DashboardLayout from "../../components/common/DashboardLayout";
 
+/**
+ * PPBDashboard — role-specific container for Pegawai Penyelaras Bahagian.
+ * Defines this role's menu items here, then hands them to the shared
+ * DashboardLayout (which renders Sidebar + <Outlet /> for the actual page).
+ */
 const menuItems = [
   {
     label: "Penerimaan Laporan",
-    path: "/pegawai-penyelaras-bahagian/penerimaan",
+    path: "/pegawai-penyelaras/penerimaan",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -14,7 +19,7 @@ const menuItems = [
   },
   {
     label: "Laporan Dihantar",
-    path: "/pegawai-penyelaras-bahagian/laporan",
+    path: "/pegawai-penyelaras/laporan",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 2L11 13" />
@@ -24,7 +29,7 @@ const menuItems = [
   },
   {
     label: "Status Kerja",
-    path: "/pegawai-penyelaras-bahagian/status",
+    path: "/pegawai-penyelaras/status",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1" />

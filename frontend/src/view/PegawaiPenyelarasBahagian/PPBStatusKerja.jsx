@@ -1,6 +1,6 @@
 import Navbar from "../../components/common/navbar";
 
-export default function StatusKerja() {
+export default function PPBStatusKerja() {
   return (
     <>
       <Navbar

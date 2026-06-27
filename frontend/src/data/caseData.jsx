@@ -1,7 +1,7 @@
 // Dummy seed data for the case list & department sub-reports.
 // Replace with real API data later — shape kept identical so swapping
 // in a fetch() call only requires changing where this array comes from.
- 
+
 export const caseList = [
   {
     ref: "PDK/KLG/2026/0847",
@@ -31,7 +31,7 @@ export const caseList = [
     status: "pending",
   },
 ];
- 
+
 // Department sub-reports shown inside the case detail / consolidation workspace.
 // In the original vanilla version these were static for every case; kept the same here.
 export const departmentReports = [
@@ -95,7 +95,7 @@ export const departmentReports = [
     attachments: [{ name: "Laporan_Keselamatan_PDK0847.pdf", type: "pdf" }],
   },
 ];
- 
+
 // AI consolidation pipeline progress steps (label + percentage), used to
 // drive the animated progress bar inside the loading overlay.
 export const STRATEGI_MAPPING = [

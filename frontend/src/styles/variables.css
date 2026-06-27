@@ -1,4 +1,6 @@
-/* ─── DESIGN TOKENS ─── */
+/* ─── GLOBAL BRAND VARIABLES ─── */
+/* Shared across all roles. Imported once (e.g. in global.css or main entry). */
+ 
 :root {
   --navy:         #0d2137;
   --navy-mid:     #103559;

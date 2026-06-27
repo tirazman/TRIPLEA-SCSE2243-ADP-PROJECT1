@@ -1,5 +1,10 @@
-import "../../styles/global.css";
+import "../../styles/navbar.css";
 
+/**
+ * Shared Navbar/topbar used by every role and every page.
+ * Title, breadcrumb and the status pill change per-page, so they are
+ * passed in as props by whichever page renders this component.
+ */
 export default function Navbar({
   title,
   breadcrumbItems = [],

@@ -1,6 +1,19 @@
 import { NavLink } from "react-router-dom";
 import "../../styles/sidebar.css";
 
+/**
+ * Shared Sidebar used by every role.
+ *
+ * Do NOT hardcode role-specific menu items in this file.
+ * Each role's *Dashboard.jsx (e.g. PPBDashboard.jsx) defines its own
+ * `menuItems` array and passes it down through DashboardLayout, e.g.:
+ *
+ *   const menuItems = [
+ *     { label: "Penerimaan Laporan", path: "/pegawai-penyelaras/penerimaan", icon: <SomeIcon /> },
+ *     ...
+ *   ];
+ *   <DashboardLayout menuItems={menuItems} />
+ */
 export default function Sidebar({
   menuItems = [],
   brandTitle = "e-Urus PDK",

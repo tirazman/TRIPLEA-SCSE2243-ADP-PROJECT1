@@ -1,0 +1,55 @@
+/* ─── SYSTEM HEADER (TOPBAR) ─── */
+.topbar {
+  height: var(--topbar-h);
+  background: var(--navy);
+  border-bottom: 1px solid var(--navy-border);
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100; gap: 16px;
+}
+ 
+.topbar-left { display: flex; flex-direction: column; gap: 1px; }
+.topbar-title { font-size: 13px; font-weight: 600; color: var(--white); }
+.breadcrumb { font-size: 10.5px; color: rgba(255,255,255,0.35); display: flex; align-items: center; gap: 4px; }
+.breadcrumb-sep { opacity: 0.4; margin: 0 4px; }
+.breadcrumb-active { color: rgba(255,255,255,0.58); }
+ 
+.topbar-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+ 
+.topbar-status {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 11px;
+  background: rgba(184,146,42,0.1);
+  border: 1px solid rgba(184,146,42,0.22);
+  border-radius: var(--radius-sm);
+  font-size: 11px; font-weight: 500; color: var(--gold-light);
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold-light); animation: blink 2s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+ 
+.topbar-divider { width: 1px; height: 26px; background: rgba(255,255,255,0.1); }
+ 
+/* Profile Silhouette Badge Component */
+.profile-widget {
+  display: flex; align-items: center; gap: 9px;
+  cursor: pointer; padding: 4px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition: background 0.13s, border-color 0.13s;
+}
+.profile-widget:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+ 
+.profile-avatar {
+  width: 30px; height: 30px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.profile-avatar svg { width: 18px; height: 18px; stroke: rgba(255,255,255,0.75); stroke-width: 1.5; fill: none; }
+ 
+.profile-info-wrap { display: flex; flex-direction: column; gap: 1px; }
+.profile-name { font-size: 12px; font-weight: 600; color: var(--white); white-space: nowrap; }
+.profile-role { font-size: 10px; color: rgba(255,255,255,0.4); white-space: nowrap; }
+.profile-chevron svg { width: 12px; height: 12px; stroke: rgba(255,255,255,0.3); stroke-width: 2; }

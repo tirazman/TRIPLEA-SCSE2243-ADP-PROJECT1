@@ -1,6 +1,6 @@
 import Navbar from "../../components/common/navbar";
 
-export default function LaporanDihantar() {
+export default function PPBLaporanDihantar() {
   return (
     <>
       <Navbar
@@ -18,3 +18,4 @@ export default function LaporanDihantar() {
     </>
   );
 }
+
