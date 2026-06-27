@@ -1,0 +1,16 @@
+/* ─── BASE RESET & TYPOGRAPHY ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+html, body {
+  font-family: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
+  background: var(--page-bg);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+body { display: flex; }
+ 
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+ 
