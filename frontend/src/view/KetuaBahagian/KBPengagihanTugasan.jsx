@@ -64,7 +64,7 @@ function NewTugasanModal({ onClose, onCreate }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="kb-modal-form">
           <div className="kb-modal-body">
             <div className="form-group">
               <label className="form-label">Pilih Kes<span className="required">*</span></label>
