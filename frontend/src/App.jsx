@@ -4,7 +4,12 @@ import Login from "./view/Auth/Login";
 
 import PTDashboard from "./view/PembantuTadbir/PTDashboard";
 import KJDashboard from "./view/KetuaJabatan/KJDashboard";
+
 import KBDashboard from "./view/KetuaBahagian/KBDashboard";
+import KBArahanKetuaJabatan from "./view/KetuaBahagian/KBArahanKetuaJabatan";
+import KBPengagihanTugasan from "./view/KetuaBahagian/KBPengagihanTugasan";
+import KBLaporanDihantar from "./view/KetuaBahagian/KBLaporanDihantar";
+import KBStatusKerja from "./view/KetuaBahagian/KBStatusKerja";
 
 import PPLDashboard from "./view/PegawaiPenyediaLaporan/PPLDashboard";
 import PPLStatusKerja from "./view/PegawaiPenyediaLaporan/PPLStatusKerja";
@@ -22,7 +27,15 @@ function App() {
 
         <Route path="/pembantu-tadbir" element={<PTDashboard />} />
         <Route path="/ketua-jabatan" element={<KJDashboard />} />
-        <Route path="/ketua-bahagian" element={<KBDashboard />} />
+
+        {/*Ketua Bahagian — nested so <Outlet /> inside KBDashboard (the layout wrapper) has somewhere to render the actual page.*/}
+        <Route path="/ketua-bahagian" element={<KBDashboard />}>
+          <Route index element={<Navigate to="arahan-ketua-jabatan" replace />} />
+          <Route path="arahan-ketua-jabatan" element={<KBArahanKetuaJabatan />} />
+          <Route path="pengagihan-tugasan" element={<KBPengagihanTugasan />} />
+          <Route path="laporan-dihantar" element={<KBLaporanDihantar />} />
+          <Route path="status-kerja" element={<KBStatusKerja />} />
+        </Route>
 
         {/* Pegawai Penyedia Laporan */}
         <Route path="/pegawai-penyedia" element={<PPLDashboard />}>
