@@ -1,0 +1,375 @@
+/* Reuses .page-header, .page-heading, .page-subheading,
+   .table-panel, .data-table, .status-badge,
+   .badge-pending, .badge-received, .btn-secondary
+   from shared global styles. Only new/overridden things below. */
+ 
+/* ─── Page header: column layout for this page ─── */
+.page-header--col {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+ 
+/* ─── Action bar: search + new button ─── */
+.page-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+ 
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 380px;
+  display: flex;
+  align-items: center;
+}
+ 
+.search-icon {
+  position: absolute;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  stroke: var(--text-soft);
+  stroke-width: 2;
+  pointer-events: none;
+}
+ 
+.search-input {
+  width: 100%;
+  padding: 8px 32px 8px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  background: var(--white);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-input::placeholder { color: var(--text-muted); }
+.search-input:focus { border-color: var(--navy-mid); }
+ 
+.search-clear {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  color: var(--text-soft);
+}
+.search-clear svg { width: 12px; height: 12px; }
+ 
+/* ─── New tugasan button ─── */
+.btn-tugasan-baharu {
+  padding: 8px 16px;
+  background: var(--navy);
+  color: var(--white);
+  border: 1px solid var(--navy-border);
+  border-radius: var(--radius-md);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: background 0.13s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-tugasan-baharu:hover { background: var(--navy-hover); }
+.btn-tugasan-baharu svg { width: 14px; height: 14px; stroke: var(--white); stroke-width: 2.2; }
+ 
+/* ─── Table: prevent overflow ─── */
+.table-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+ 
+.data-table {
+  width: 100%;
+  table-layout: fixed;
+  min-width: 720px;
+}
+ 
+.td-arahan-preview {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-mid);
+  font-size: 12px;
+}
+ 
+.td-empty {
+  text-align: center;
+  padding: 32px 0;
+  color: var(--text-soft);
+  font-size: 12.5px;
+  font-style: italic;
+}
+ 
+/* ─── Icon-only detail button ─── */
+.btn-icon-detail {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.btn-icon-detail:hover {
+  background: var(--surface-3, #f0f2f5);
+  border-color: var(--navy-mid);
+}
+.btn-icon-detail svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--text-mid);
+}
+ 
+/* ─── Priority pill ─── */
+.priority-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 3px;
+}
+.priority-tinggi { background: var(--red-bg); color: var(--red); }
+.priority-sederhana { background: var(--amber-bg); color: var(--amber); }
+.priority-rendah { background: var(--surface-2); color: var(--text-soft); border: 1px solid var(--border); }
+ 
+/* ════════════════════════════
+   MODAL
+   ════════════════════════════ */
+.kb-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 33, 55, 0.45);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.kb-modal-overlay.show { display: flex; }
+ 
+.kb-modal-box {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+}
+ 
+.kb-modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.kb-modal-title { font-size: 14px; font-weight: 700; color: var(--navy); }
+.kb-modal-subtitle { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+ 
+.kb-modal-close-btn {
+  background: var(--page-bg);
+  border: 1px solid var(--border);
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.kb-modal-close-btn svg { width: 12px; height: 12px; stroke: var(--text-mid); stroke-width: 2.5; }
+ 
+.kb-modal-body {
+  overflow-y: auto;
+  padding: 20px 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+ 
+.kb-modal-footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+ 
+.kb-modal-footer-right {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+ 
+/* ─── Danger outline button (cancel/remove) ─── */
+.btn-danger-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid var(--red-border, #fca5a5);
+  border-radius: var(--radius-md);
+  color: var(--red);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.13s;
+}
+.btn-danger-outline:hover { background: var(--red-bg); }
+.btn-danger-outline svg { width: 13px; height: 13px; flex-shrink: 0; }
+ 
+/* ─── Form ─── */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 11.5px; font-weight: 600; color: var(--text-mid); }
+.form-label .required { color: var(--red); margin-left: 2px; }
+ 
+.form-input,
+.form-select,
+.form-textarea {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  background: var(--white);
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus { border-color: var(--navy-mid); }
+.form-textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+ 
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+ 
+.dummy-upload-box {
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  text-align: center;
+  background: var(--surface-2);
+  color: var(--text-soft);
+  font-size: 11.5px;
+}
+.dummy-upload-box svg { width: 20px; height: 20px; stroke: var(--text-muted); stroke-width: 1.6; margin-bottom: 4px; }
+ 
+.btn-primary-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: var(--navy);
+  color: var(--white);
+  border: 1px solid var(--navy-border);
+  border-radius: var(--radius-md);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.13s;
+}
+.btn-primary-submit:hover { background: var(--navy-hover); }
+.btn-primary-submit svg { width: 13px; height: 13px; flex-shrink: 0; }
+ 
+/* ─── Detail view (Lihat Tugasan) ─── */
+.case-ref-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--navy);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+.case-ref-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin-bottom: 4px;
+}
+.case-ref-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+.case-ref-no { font-size: 11px; color: var(--text-soft); font-family: 'IBM Plex Mono', monospace; }
+ 
+.instruction-card {
+  background: var(--navy);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  display: flex;
+  gap: 12px;
+}
+.instruction-icon {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.instruction-icon svg { width: 15px; height: 15px; stroke: var(--gold-light); stroke-width: 1.8; }
+.instruction-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  margin-bottom: 6px;
+}
+.instruction-text { font-size: 12.5px; color: rgba(255,255,255,0.92); line-height: 1.6; margin-bottom: 10px; }
+.instruction-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 10.5px;
+  color: rgba(255,255,255,0.5);
+}
+.instruction-meta-item { display: inline-flex; align-items: center; gap: 4px; }
+.instruction-meta-item svg { width: 11px; height: 11px; stroke-width: 2; }
+.instruction-meta strong { color: rgba(255,255,255,0.85); font-weight: 600; }
+ 
+.deadline-banner {
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.deadline-banner-left { display: flex; align-items: center; gap: 10px; }
+.deadline-banner-left svg { width: 18px; height: 18px; stroke: var(--amber); stroke-width: 1.8; flex-shrink: 0; }
+.deadline-banner-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.deadline-banner-date { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-top: 1px; }
