@@ -19,7 +19,7 @@ function SystemModal({ show, isSuccess, title, desc }) {
           </div>
         )}
         <h3>{title}</h3>
-        <p>{desc}</p>
+        <p style={{ whiteSpace: "pre-line" }}>{desc}</p>
       </div>
     </div>
   );
@@ -50,7 +50,13 @@ function ToastAlert({ toast }) {
 
 export default function PTPenerimaanLaporan() {
   const [view, setView] = useState("list");
-  const [submissions, setSubmissions] = useState(PTSubmissionList);
+  // Tukar status lalai "Direkodkan"/"Disemak" kepada "Dalam Tindakan"
+  const [submissions, setSubmissions] = useState(() => 
+    PTSubmissionList.map(item => ({
+      ...item,
+      status: item.status === "Direkodkan" || item.status === "Disemak" ? "Dalam Tindakan" : item.status
+    }))
+  );
   
   // Form States
   const [formData, setFormData] = useState({ title: "", notes: "" });
@@ -159,7 +165,7 @@ export default function PTPenerimaanLaporan() {
           ref: siriRujukan,
           title: formData.title.trim(),
           date: today,
-          status: "Direkodkan"
+          status: "Dalam Tindakan"
         };
         
         setSubmissions(prev => [newRecord, ...prev]);
@@ -172,7 +178,7 @@ export default function PTPenerimaanLaporan() {
   return (
     <>
       <Navbar 
-        title="Penyerahan Digital & Pengurusan Rekod"
+        title="Penerimaan Laporan"
         breadcrumbItems={["e-Urus PDK", "Subsistem 1", "Penyerahan Baru"]}
         statusText="Sistem Dalam Talian"
         userName="Pn. Aisyah Binti Ahmad"
@@ -187,11 +193,12 @@ export default function PTPenerimaanLaporan() {
                 <h1 className="page-heading">Senarai Rekod Penyerahan</h1>
                 <p className="page-subheading">Akses dokumen yang telah dimuat naik dan dijana nombor rujukan.</p>
               </div>
+              {/* 📌 Ditukar kepada "Daftar & Muat Naik Fail" */}
               <button className="btn-primary" onClick={handleOpenForm}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
                 </svg>
-                Penyerahan Baru
+                Daftar &amp; Muat Naik Fail
               </button>
             </div>
 
@@ -228,7 +235,8 @@ export default function PTPenerimaanLaporan() {
                       </td>
                       <td className="td-date">{item.date}</td>
                       <td>
-                        <span className={`status-badge ${item.status === 'Direkodkan' ? 'badge-success' : 'badge-warning'}`}>
+                        {/* 📌 Ditukar kepada "Dalam Tindakan" */}
+                        <span className={`status-badge ${item.status === 'Dalam Tindakan' ? 'badge-warning' : 'badge-success'}`}>
                           <div className="badge-dot"></div>
                           {item.status}
                         </span>
@@ -334,7 +342,7 @@ export default function PTPenerimaanLaporan() {
                           <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><polyline points="13 2 13 9 20 9" />
                         </svg>
                       </div>
-                      <div className="upload-heading">Seret & lepas dokumen di sini</div>
+                      <div className="upload-heading">Seret &amp; lepas dokumen di sini</div>
                       <div className="upload-sub">atau klik untuk melayari fail sistem</div>
                       <div className="upload-types">Format disokong: PDF, DOC, DOCX (Max: 10MB)</div>
                     </div>
