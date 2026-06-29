@@ -350,11 +350,11 @@ export default function KJPengagihanBahagian() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th style={{ width: "140px" }}>No. Rujukan</th>
+                  <th style={{ width: "160px" }}>No. Rujukan</th>
                   <th>Tajuk Aduan</th>
-                  <th style={{ width: "100px" }}>Tarikh Terima</th>
-                  <th style={{ width: "100px" }}>Tempoh Akhir</th>
-                  <th style={{ width: "120px" }}>Status</th>
+                  <th style={{ width: "120px" }}>Tarikh Terima</th>
+                  <th style={{ width: "120px" }}>Tempoh Akhir</th>
+                  <th style={{ width: "140px" }}>Status</th>
                   <th style={{ width: "90px", textAlign: "center" }}>Tindakan</th>
                 </tr>
               </thead>

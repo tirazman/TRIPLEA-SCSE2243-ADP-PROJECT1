@@ -206,3 +206,26 @@
   justify-content: flex-end;
   flex-shrink: 0;
 }
+
+.table-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table .col-action,
+.data-table thead th.col-action {
+  text-align: right;
+  white-space: nowrap;
+  width: 110px;
+  min-width: 110px;
+  overflow: visible;
+}
+
+.data-table .col-action .btn-secondary,
+.data-table .col-action .btn-tindakan {
+  display: inline-flex;
+}
+
+.data-table td.col-action {
+  overflow: visible;
+}
