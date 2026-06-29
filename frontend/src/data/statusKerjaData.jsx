@@ -278,7 +278,7 @@ export const pplLaporanData = [
 ];
 
 
-
+// DATA ONLY FOR KB
 export const kbPengagihanStatusData = [
   {
     ref: "PDK/KLG/2026/0912",
