@@ -56,6 +56,7 @@ export default function Login() {
       if (response.ok) {
         // Store user info for session persistence
         localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("token", data.token);
 
         // Map database roles to your App.jsx routes
         const roleRoutes = {
