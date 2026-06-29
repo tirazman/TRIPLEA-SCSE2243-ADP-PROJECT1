@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import Navbar from "../../components/common/navbar";
 import { PTSubmissionList } from "../../data/PTSubmissionList";
-import "../../styles/pages/PTPenerimaanLaporan.css";
+import "../../styles/pages/PTPendaftaranFail.css"; // Kekalkan atau tukar jika fail CSS di-rename nanti
 
 /* ─── System Overlay Modal ─── */
 function SystemModal({ show, isSuccess, title, desc }) {
@@ -48,7 +48,8 @@ function ToastAlert({ toast }) {
   );
 }
 
-export default function PTPenerimaanLaporan() {
+// 📌 1. Nama komponen ditukar kepada PTPendaftaranFail
+export default function PTPendaftaranFail() {
   const [view, setView] = useState("list");
   // Tukar status lalai "Direkodkan"/"Disemak" kepada "Dalam Tindakan"
   const [submissions, setSubmissions] = useState(() => 
@@ -177,10 +178,10 @@ export default function PTPenerimaanLaporan() {
 
   return (
     <>
+      {/* 📌 2. Kemas kini tajuk Navbar dan breadcrumbItems, serta buang statusText */}
       <Navbar 
-        title="Penerimaan Laporan"
-        breadcrumbItems={["e-Urus PDK", "Subsistem 1", "Penyerahan Baru"]}
-        statusText="Sistem Dalam Talian"
+        title="Pendaftaran Fail"
+        breadcrumbItems={["e-Urus PDK", "Subsistem 1", "Pendaftaran Fail"]}
         userName="Pn. Aisyah Binti Ahmad"
         userRole="Pembantu Tadbir"
       />
@@ -193,7 +194,6 @@ export default function PTPenerimaanLaporan() {
                 <h1 className="page-heading">Senarai Rekod Penyerahan</h1>
                 <p className="page-subheading">Akses dokumen yang telah dimuat naik dan dijana nombor rujukan.</p>
               </div>
-              {/* 📌 Ditukar kepada "Daftar & Muat Naik Fail" */}
               <button className="btn-primary" onClick={handleOpenForm}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
@@ -235,7 +235,6 @@ export default function PTPenerimaanLaporan() {
                       </td>
                       <td className="td-date">{item.date}</td>
                       <td>
-                        {/* 📌 Ditukar kepada "Dalam Tindakan" */}
                         <span className={`status-badge ${item.status === 'Dalam Tindakan' ? 'badge-warning' : 'badge-success'}`}>
                           <div className="badge-dot"></div>
                           {item.status}
