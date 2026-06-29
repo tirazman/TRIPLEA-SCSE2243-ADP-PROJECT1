@@ -271,7 +271,7 @@ export default function KBStatusKerja() {
   const [activeTugasan, setActiveTugasan] = useState(null);
   const [activePPL, setActivePPL]         = useState(null);
   const [searchQuery, setSearchQuery]     = useState("");
-  const [showToast, setShowToast]         = useState(false); // State kawalan paparan toast merah
+  const [showToast, setShowToast]         = useState(false);
 
   // Tab 1 stats
   const tugasanSudah = kbTugasanList.filter(t => t.status !== "Belum Diagihkan").length;
@@ -284,10 +284,10 @@ export default function KBStatusKerja() {
   const pplCompleted = pplLaporanData.filter(r => r.status === "Completed").length;
   const pplOverdue   = pplLaporanData.filter(r => r.status === "Overdue").length;
 
-  // ── Auto-trigger makluman peringatan merah ──
+  // ── Auto-trigger makluman peringatan merah pastel ──
   useEffect(() => {
     if (tugasanBelum > 0) {
-      setShowToast(true); // Memaparkan toast secara kekal sehingga diklik X
+      setShowToast(true);
     }
   }, [tugasanBelum]);
 
@@ -498,7 +498,6 @@ export default function KBStatusKerja() {
                   <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="2">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
                   </svg>
                 </div>
                 <div>
@@ -630,12 +629,15 @@ export default function KBStatusKerja() {
 
       </div>
 
-      {/* 🔴 TOAST REMINDER MERAH (PENDING TASK) */}
+      {/* 🔴 TOAST REMINDER MERAH PASTEL PENUH (PENDING TASK — KEKAL SEHINGGA DIKLIK X) */}
       <div 
         className={`toast${showToast ? " show" : ""}`} 
-        style={{ borderLeft: "4px solid var(--red, #d92d20)" }}
+        style={{ 
+          borderLeft: "4px solid var(--red, #d92d20)",
+          background: "#fef3f2" 
+        }}
       >
-        <div className="toast-icon-wrap" style={{ background: "var(--red-bg, #fef3f2)" }}>
+        <div className="toast-icon-wrap" style={{ background: "#fee2e2" }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--red, #d92d20)" strokeWidth="2.5">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
@@ -644,16 +646,17 @@ export default function KBStatusKerja() {
         </div>
         <div className="toast-body">
           <div className="toast-title" style={{ color: "var(--red, #d92d20)" }}>Tindakan Diperlukan</div>
-          <div className="toast-msg">
+          <div className="toast-msg" style={{ color: "#b42318" }}>
             Terdapat <strong>{tugasanBelum} kes aduan baharu</strong> yang belum diagihkan kepada Pegawai Penyedia Laporan (PPL).
           </div>
         </div>
-        {/* Butang pangkah manual untuk menutup */}
         <button 
+          type="button"
           onClick={() => setShowToast(false)}
           style={{
-            background: "none", border: "none", color: "var(--text-muted)",
-            cursor: "pointer", fontSize: "14px", padding: "0 4px", marginLeft: "auto"
+            background: "none", border: "none", color: "#7a271a",
+            cursor: "pointer", fontSize: "14px", padding: "0 4px", marginLeft: "auto",
+            fontWeight: "bold"
           }}
         >
           ✕

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Navbar from "../../components/common/navbar";
 import {
   kjCaseRegistry,
@@ -33,6 +33,7 @@ function PipelineStageBadge({ stage }) {
   );
 }
 
+// ... (Kekalkan fungsi DeptStatusBadge, DeptTimelineItem, PipelineStepper, dan ConsolidatedReportBlock yang sedia ada)
 function DeptStatusBadge({ status }) {
   const map = {
     Pending: { cls: "badge-pending", label: deptStatusLabel.Pending },
@@ -421,7 +422,6 @@ function CaseDetailModal({ caseData, onClose, onApprove, isSubmitting }) {
   );
 }
 
-/* ─── Modal Butiran Ketua Bahagian (Read-Only) ─── */
 function ButiranKBModal({ data, onClose }) {
   if (!data) return null;
 
@@ -502,6 +502,9 @@ function ButiranKBModal({ data, onClose }) {
   );
 }
 
+/* ════════════════════════════════════════════
+   MAIN COMPONENT
+   ════════════════════════════════════════════ */
 export default function KJStatusKerja() {
   const [cases, setCases] = useState(kjWorkStatusCases);
   const [activeTab, setActiveTab] = useState("tugasan"); // "tugasan" atau "kb"
@@ -510,6 +513,7 @@ export default function KJStatusKerja() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showReminder, setShowReminder] = useState(false); // State kawalan untuk peringatan merah pastel
 
   const activeCase = cases.find((c) => c.ref === activeCaseRef) || null;
 
@@ -540,6 +544,13 @@ export default function KJStatusKerja() {
     }),
     [cases]
   );
+
+  // Auto-trigger peringatan merah sekiranya ada tugasan yang Menunggu Semakan Akhir
+  useEffect(() => {
+    if (statsTugasan.menungguSemakan > 0) {
+      setShowReminder(true);
+    }
+  }, [statsTugasan.menungguSemakan]);
 
   // Tab 2 Data & Stats Generation (Status Ketua Bahagian)
   const kbStatusList = useMemo(() => {
@@ -939,7 +950,7 @@ export default function KJStatusKerja() {
         />
       )}
 
-      {/* ─── TOAST NOTIFICATION ─── */}
+      {/* ─── TOAST NOTIFICATION SUCCESS (AUTO HIDE) ─── */}
       <div className={`toast${toast ? " show" : ""}`}>
         <div className="toast-icon-wrap">
           <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -950,6 +961,40 @@ export default function KJStatusKerja() {
           <div className="toast-title">Berjaya</div>
           <div className="toast-msg">{toast}</div>
         </div>
+      </div>
+
+      {/* 🔴 TOAST REMINDER MERAH PASTEL PENH (PENDING SEMAKAN AKHIR - KEKAL SEHINGGA DIKLIK ✕) */}
+      <div 
+        className={`toast${showReminder ? " show" : ""}`} 
+        style={{ 
+          borderLeft: "4px solid var(--red, #d92d20)",
+          background: "#fef3f2" 
+        }}
+      >
+        <div className="toast-icon-wrap" style={{ background: "#fee2e2" }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--red, #d92d20)" strokeWidth="2.5">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <div className="toast-body">
+          <div className="toast-title" style={{ color: "var(--red, #d92d20)" }}>Tindakan Diperlukan</div>
+          <div className="toast-msg" style={{ color: "#b42318" }}>
+            Terdapat <strong>{statsTugasan.menungguSemakan} kes</strong> yang sedang <strong>Menunggu Semakan Akhir Ketua Jabatan</strong>.
+          </div>
+        </div>
+        <button 
+          type="button"
+          onClick={() => setShowReminder(false)}
+          style={{
+            background: "none", border: "none", color: "#7a271a",
+            cursor: "pointer", fontSize: "14px", padding: "0 4px", marginLeft: "auto",
+            fontWeight: "bold"
+          }}
+        >
+          ✕
+        </button>
       </div>
     </>
   );
