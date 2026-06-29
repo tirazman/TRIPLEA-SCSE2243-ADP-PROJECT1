@@ -129,7 +129,7 @@ function ButiranTugasanModal({ tugasan, onClose }) {
   );
 }
 
-/* ─── Modal Butiran PPL (read-only) ─── */
+/* ─── Modal Butiran PPL (Kemas kini: Ditambah fail laporan untuk status Completed) ─── */
 function ButiranPPLModal({ report, onClose }) {
   if (!report) return null;
 
@@ -220,6 +220,35 @@ function ButiranPPLModal({ report, onClose }) {
                   color: 'var(--text-mid)', fontStyle: 'italic', lineHeight: 1.6,
                 }}>
                   {report.notes}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* 📌 PAPARAN FAIL LAPORAN DARIPADA PPL JIKA STATUS COMPLETED */}
+          {report.status === "Completed" && (
+            <>
+              <div className="case-modal-divider"/>
+              <div>
+                <div className="case-modal-section-label">Dokumen Laporan Diterima</div>
+                <div className="kj-file-card" style={{ marginTop: '4px' }}>
+                  <div className="kj-file-icon" style={{ background: '#fef2f2', color: '#ef4444', borderColor: '#fee2e2' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  </div>
+                  <div className="kj-file-info">
+                    <div className="kj-file-name" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {report.title}.pdf
+                    </div>
+                    <div className="kj-file-meta" style={{ fontSize: '11px', color: 'var(--text-soft)' }}>
+                      2.4 MB • PDF • Selesai Dihantar
+                    </div>
+                  </div>
+                  <button type="button" className="btn-outline kj-file-view" style={{ padding: '6px 12px', fontSize: '12px' }}>
+                    Lihat Laporan
+                  </button>
                 </div>
               </div>
             </>
