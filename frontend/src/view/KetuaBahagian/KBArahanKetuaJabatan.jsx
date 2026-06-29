@@ -35,21 +35,10 @@ function ViewSenarai({ onSemak }) {
         <div>
           <h1 className="page-heading">Arahan Ketua Jabatan</h1>
           <p className="page-subheading">
-            Semak butiran kes yang diarahkan oleh Ketua Jabatan, sediakan laporan penuh dan hantar kepada Pegawai Penyedia Laporan untuk tindakan seterusnya.
+            Semak butiran kes yang diarahkan oleh Ketua Jabatan, sediakan laporan penuh and hantar kepada Pegawai Penyedia Laporan untuk tindakan seterusnya.
           </p>
         </div>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 6, padding: "5px 12px",
-          background: "rgba(184,146,42,0.1)", border: "1px solid rgba(184,146,42,0.22)",
-          borderRadius: "var(--radius-sm)", fontSize: 11, fontWeight: 500, color: "#d4a84b",
-          whiteSpace: "nowrap",
-        }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: "50%", background: "#d4a84b",
-            display: "inline-block", animation: "blink 2s ease-in-out infinite",
-          }} />
-          {arahanKes.length} Kes Menunggu Tindakan
-        </div>
+        {/* Lencana status kes menunggu tindakan telah dibuang dari sini */}
       </div>
 
       <div className="summary-strip">
@@ -109,6 +98,7 @@ function ViewSenarai({ onSemak }) {
             <col style={{ width: "140px" }} />
             <col />
             <col style={{ width: "120px" }} />
+            <col style={{ width: "120px" }} />
             <col style={{ width: "100px" }} />
             <col style={{ width: "80px" }} />
           </colgroup>
@@ -116,7 +106,8 @@ function ViewSenarai({ onSemak }) {
             <tr>
               <th>No. Rujukan</th>
               <th>Tajuk Kes</th>
-              <th>Tarikh Arahan</th>
+              <th>Tarikh Terima</th>
+              <th>Tempoh Akhir</th>
               <th>Keutamaan</th>
               <th style={{ textAlign: "center" }}>Tindakan</th>
             </tr>
@@ -129,7 +120,10 @@ function ViewSenarai({ onSemak }) {
                   <div className="td-tajuk">{kes.tajuk}</div>
                   <div className="td-tajuk-sub">{kes.subtajuk}</div>
                 </td>
-                <td className="td-date">{kes.tarikhArahan}</td>
+                {/* Memaparkan tarikh sahaja tanpa format masa */}
+                <td className="td-date">{kes.tarikhTerima ? kes.tarikhTerima.split(',')[0] : "-"}</td>
+                {/* Menggunakan stail teks standard yang sama seperti ruangan lain */}
+                <td className="td-date">{kes.tempohAkhir || "-"}</td>
                 <td><PriorityBadge keutamaan={kes.keutamaan} /></td>
                 <td style={{ textAlign: "center" }}>
                   <button
