@@ -306,7 +306,7 @@ export default function KBStatusKerja() {
         }}>
           {[
             { key: "tugasan", label: "Tugasan Saya" },
-            { key: "ppl",     label: "Status PPL" },
+            { key: "ppl",     label: "Status Peg. Penyedia Laporan" },
           ].map(({ key, label }) => (
             <button
               key={key}
