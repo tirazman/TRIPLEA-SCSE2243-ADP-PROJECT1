@@ -93,7 +93,7 @@ function TaskListView({ tasks, onOpenDetail }) {
               <th>Tarikh Terima</th>
               <th>Tempoh Akhir</th>
               <th>Status Tugasan</th>
-              <th style={{ textAlign: "right" }}>Tindakan</th>
+              <th>Tindakan</th>
             </tr>
           </thead>
           <tbody>
@@ -109,7 +109,7 @@ function TaskListView({ tasks, onOpenDetail }) {
                   {t.deadline}
                 </td>
                 <td><TaskStatusBadge status={t.status} /></td>
-                <td style={{ textAlign: "right" }}>
+                <td>
                   <button className="btn-tindakan" onClick={() => onOpenDetail(t)}>
                     <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 2L11 13" />
@@ -228,16 +228,9 @@ function TaskDetailView({ task, onBack, onContinueToUpload }) {
   );
 }
 
-/* ════════════════════════════════════════════════════════════════
-   MAIN PAGE — Arahan Ketua Bahagian
-   Default landing page for Pegawai Penyedia Laporan. List + task
-   detail are merged here via internal state toggle (no separate
-   route for detail). "Hantar Laporan" (muat naik) stays a SEPARATE
-   page/route per spec, reached via navigate().
-   ════════════════════════════════════════════════════════════════ */
 export default function PPLArahanKetuaBahagian() {
   const navigate = useNavigate();
-  const [view, setView] = useState("list"); // "list" | "detail"
+  const [view, setView] = useState("list");
   const [selectedTask, setSelectedTask] = useState(null);
 
   const handleOpenDetail = (task) => {

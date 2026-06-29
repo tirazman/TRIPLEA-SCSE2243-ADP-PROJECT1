@@ -79,13 +79,6 @@ export default function PPLLaporanDihantar() {
   const diluluskanCount = submittedReports.filter((r) => r.status === "Diluluskan").length;
   const perluPembetulanCount = submittedReports.filter((r) => r.status === "Perlu Pembetulan").length;
 
-  const handleDownload = (report) => {
-    const link = document.createElement("a");
-    link.href = "data:application/octet-stream,";
-    link.download = `${report.id}.pdf`;
-    link.click();
-  };
-
   return (
     <>
       <Navbar
@@ -176,21 +169,13 @@ export default function PPLLaporanDihantar() {
                   <td className="td-date">{r.dateSubmitted}</td>
                   <td><ReportStatusBadge status={r.status} /></td>
                   <td className="td-date">{r.kbName}</td>
-                  <td style={{ textAlign: "right", display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                  <td style={{ textAlign: "right" }}>
                     <button className="btn-secondary" onClick={() => setViewingReport(r)}>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <circle cx="11" cy="11" r="8" />
                         <line x1="21" y1="21" x2="16.65" y2="16.65" />
                       </svg>
                       Lihat
-                    </button>
-                    <button className="btn-secondary" onClick={() => handleDownload(r)}>
-                      <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                      Muat Turun
                     </button>
                   </td>
                 </tr>
