@@ -171,3 +171,32 @@ export const deptStatusLabel = {
   Completed: "Selesai & Dihantar",
   Overdue: "Melebihi Tempoh",
 };
+
+// Data laporan tugasan untuk paparan PPL (Pegawai Penyedia Laporan).
+// PPL bertanggungjawab menyediakan laporan bagi setiap kes yang diterima.
+export const pplLaporanData = [
+  {
+    ref: "PDK/KLG/2026/1024-L",
+    aduan: "Struktur Jambatan Retak di Chamek",
+    title: "Laporan Cadangan Naiktaraf Jambatan Kampung Melayu Nyior, Chamek",
+    status: "Pending",
+    timestamp: "2026-06-28 08:30:00",
+    notes: "",
+  },
+  {
+    ref: "PDK/KLG/2026/0912-L",
+    aduan: "Rumah Usang dan Bumbung Bocor Warga Emas",
+    title: "Laporan Siasatan Bantuan Baik Pulih Rumah Kasih Johor — Mukim Paloh",
+    status: "In Progress",
+    timestamp: "2026-06-27 11:15:00",
+    notes: "Dalam proses pengesahan dokumen pemilikan tanah pemohon.",
+  },
+  {
+    ref: "PDK/KLG/2026/0889-L",
+    aduan: "Limpahan Air Sungai Mengkibol-Kedai Pekan Kluang",
+    title: "Laporan Penilaian Kerosakan Infrastruktur Pasca-Banjir Dun Mahkota",
+    status: "Completed",
+    timestamp: "2026-06-25 16:45:00",
+    notes: "Telah dihantar ke Unit Pembangunan Fail Daerah untuk tindakan peruntukan.",
+  },
+];
