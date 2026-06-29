@@ -329,3 +329,4 @@
 .toast-title { font-size: 12.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
 .toast-msg   { font-size: 11px; color: var(--text-soft); line-height: 1.5; }
 .toast-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 0; flex-shrink: 0; }
+

@@ -106,3 +106,4 @@ export const STRATEGI_MAPPING = [
   { pct: 95, msg: "Menyelaraskan struktur format dokumen rasmi..." },
   { pct: 100, msg: "Konsolidasi selesai. Menjana draf Word..." },
 ];
+

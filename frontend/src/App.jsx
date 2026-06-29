@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./view/Auth/Login";
 
 import PTDashboard from "./view/PembantuTadbir/PTDashboard";
+import PTPenerimaanLaporan from "./view/PembantuTadbir/PTPenerimaanLaporan";
 
 import KJDashboard from "./view/KetuaJabatan/KJDashboard";
 import KJPenerimaanLaporan from "./view/KetuaJabatan/KJPenerimaanLaporan";
@@ -33,7 +34,11 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
 
-        <Route path="/pembantu-tadbir" element={<PTDashboard />} />
+        {/* Pembantu Tadbir */}
+        <Route path="/pembantu-tadbir" element={<PTDashboard />}>
+          <Route index element={<Navigate to="penerimaan" replace />} />
+          <Route path="penerimaan" element={<PTPenerimaanLaporan />} />
+        </Route>
 
         {/* Ketua Jabatan */}
         <Route path="/ketua-jabatan" element={<KJDashboard />}>
