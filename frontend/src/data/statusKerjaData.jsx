@@ -324,6 +324,54 @@ export const kbPengagihanStatusData = [
   },
 ];
 
+/** KB Status Kerja — Tab Tugasan Saya */
+export const kbTugasanList = [
+  {
+    id: "TGS/KB/2026/014",
+    caseRef: "PDK/KLG/2026/1024",
+    caseTitle: "Banjir Kilat — Jalan Dato' Abdul Rahman",
+    officer: "En. Shahril Bin Hamid",
+    dateGiven: "06 Jun 2026",
+    deadline: "13 Jun 2026",
+    priority: "Tinggi",
+    status: "Sudah Diagihkan",
+    instruction: "Turun padang dan sediakan laporan teknikal banjir kilat.",
+  },
+  {
+    id: "TGS/KB/2026/011",
+    caseRef: "PDK/KLG/2026/0912",
+    caseTitle: "Kerosakan Lampu Isyarat Simpang Renggam",
+    officer: "Pn. Norlia Binti Daud",
+    dateGiven: "03 Jun 2026",
+    deadline: "10 Jun 2026",
+    priority: "Tinggi",
+    status: "Lewat",
+    instruction: "Sahkan status lampu isyarat dengan JKR Daerah.",
+  },
+  {
+    id: "TGS/KB/2026/008",
+    caseRef: "PDK/KLG/2026/0889",
+    caseTitle: "Aduan Jalan Berlubang Kampung Melayu",
+    officer: "",
+    dateGiven: "—",
+    deadline: "—",
+    priority: "Sederhana",
+    status: "Belum Diagihkan",
+    instruction: "",
+  },
+  {
+    id: "TGS/KB/2026/005",
+    caseRef: "PDK/KLG/2025/0805",
+    caseTitle: "Permohonan Pembinaan Gelanggang Badminton",
+    officer: "En. Rashdan Bin Ismail",
+    dateGiven: "22 Mei 2025",
+    deadline: "29 Mei 2025",
+    priority: "Rendah",
+    status: "Selesai",
+    instruction: "Pemeriksaan tapak gelanggang badminton.",
+  },
+];
+
 // FOR KJ ONLY
 //Only cases already assigned by KJ via Pengagihan kepada Bahagian
 
