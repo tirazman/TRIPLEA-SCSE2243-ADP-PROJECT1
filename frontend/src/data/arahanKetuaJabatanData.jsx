@@ -8,6 +8,7 @@ export const arahanKes = [
     subtajuk: "Aduan infrastruktur awam — Jalan Persekutuan A3",
     tarikhArahan: "06 Jun 2026",
     tarikhTerima: "06 Jun 2026, 09:42 PG",
+    tempohAkhir: "09 Jun 2026", // <-- TAMBAH INI
     kategori: "Infrastruktur Awam",
     pemohon: "Ahmad Fauzi bin Sulaiman",
     keutamaan: "Tinggi",
@@ -23,6 +24,7 @@ export const arahanKes = [
     subtajuk: "Aduan bencana awam — kawasan bandar",
     tarikhArahan: "05 Jun 2026",
     tarikhTerima: "05 Jun 2026, 08:15 PG",
+    tempohAkhir: "08 Jun 2026", // <-- TAMBAH INI
     kategori: "Bencana Awam",
     pemohon: "Siti Hajar binti Kamarudin",
     keutamaan: "Tinggi",
@@ -38,6 +40,7 @@ export const arahanKes = [
     subtajuk: "Aduan utiliti awam — pencahayaan jalan",
     tarikhArahan: "04 Jun 2026",
     tarikhTerima: "04 Jun 2026, 02:30 PTG",
+    tempohAkhir: "11 Jun 2026", // <-- TAMBAH INI
     kategori: "Utiliti Awam",
     pemohon: "Radzuan bin Harun",
     keutamaan: "Sederhana",
@@ -53,6 +56,7 @@ export const arahanKes = [
     subtajuk: "Aduan bahaya jalan raya — tanah runtuh",
     tarikhArahan: "03 Jun 2026",
     tarikhTerima: "03 Jun 2026, 07:55 PG",
+    tempohAkhir: "06 Jun 2026", // <-- TAMBAH INI
     kategori: "Bahaya Awam",
     pemohon: "Hairul Nizam bin Othman",
     keutamaan: "Tinggi",
@@ -68,6 +72,7 @@ export const arahanKes = [
     subtajuk: "Aduan utiliti awam — bekalan air terjejas",
     tarikhArahan: "02 Jun 2026",
     tarikhTerima: "02 Jun 2026, 11:20 PG",
+    tempohAkhir: "09 Jun 2026", // <-- TAMBAH INI
     kategori: "Utiliti Awam",
     pemohon: "Norashikin binti Yusof",
     keutamaan: "Sederhana",
