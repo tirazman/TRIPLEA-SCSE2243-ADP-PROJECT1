@@ -60,13 +60,13 @@ function ViewSenarai({ onSemak }) {
           </div>
         </div>
 
-        <table className="data-table">
+        <table className="data-table" style={{ tableLayout: "auto" }}>
           <colgroup>
-            <col style={{ width: "130px" }} />
+            <col style={{ width: "140px" }} />
             <col />
-            <col style={{ width: "115px" }} />
-            <col style={{ width: "90px" }} />
-            <col style={{ width: "70px" }} />
+            <col style={{ width: "120px" }} />
+            <col style={{ width: "100px" }} />
+            <col style={{ width: "80px" }} />
           </colgroup>
           <thead>
             <tr>
