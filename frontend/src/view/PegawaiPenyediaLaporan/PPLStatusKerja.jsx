@@ -1,233 +1,312 @@
-import React, { useState } from 'react';
-import { pplLaporanData } from '../../data/statusKerjaData'; 
+import { useState } from "react";
+import Navbar from "../../components/common/navbar";
+import { pplLaporanData } from "../../data/statusKerjaData";
+import "../../styles/pages/StatusKerja.css";
 
-export default function PPLStatusKerja() {
-  const [laporanDatabase, setLaporanDatabase] = useState(pplLaporanData); 
-
-
-  // 2. STATE UNTUK TAPISAN & MODAL
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeReport, setActiveReport] = useState(null);
-  const [modalStatus, setModalStatus] = useState("Pending");
-  const [modalNotes, setModalNotes] = useState("");
-
-  // 3. PENGIRAAN STATISTIK DINAMIK
-  const total = laporanDatabase.length;
-  const pending = laporanDatabase.filter(r => r.status === "Pending").length;
-  const progress = laporanDatabase.filter(r => r.status === "In Progress").length;
-  const completed = laporanDatabase.filter(r => r.status === "Completed").length;
-
-  // 4. FUNGSI KENDALI MODAL (HANDLERS)
-  const openUpdateModal = (report) => {
-    setActiveReport(report);
-    setModalStatus(report.status);
-    setModalNotes(report.notes);
-    setIsModalOpen(true);
+/* ─── Badge status untuk setiap laporan ─── */
+function LaporanStatusBadge({ status }) {
+  const map = {
+    Pending:       { cls: "badge-pending",  label: "Menunggu Tindakan" },
+    "In Progress": { cls: "badge-progress", label: "Dalam Proses" },
+    Completed:     { cls: "badge-received", label: "Selesai & Dihantar" },
+    Overdue:       { cls: "badge-overdue",  label: "Melebihi Tempoh" },
   };
+  const conf = map[status] || map.Pending;
+  return (
+    <span className={`status-badge ${conf.cls}`}>
+      <span className="badge-dot"></span>
+      {conf.label}
+    </span>
+  );
+}
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setActiveReport(null);
-  };
+/* ─── Modal Kemaskini Status ─── */
+function UpdateModal({ report, onClose, onSave }) {
+  const [modalStatus, setModalStatus] = useState(report.status);
+  const [modalNotes, setModalNotes] = useState(report.notes);
 
-  const submitStatusUpdate = (e) => {
-    e.preventDefault();
-    
-    // Format Cap Masa Terkini: YYYY-MM-DD HH:MM:SS
+  const handleSubmit = () => {
     const now = new Date();
-    const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-
-    setLaporanDatabase(prev => 
-      prev.map(item => 
-        item.ref === activeReport.ref 
-          ? { ...item, status: modalStatus, notes: modalNotes, timestamp: formattedDate }
-          : item
-      )
-    );
-    
-    closeModal();
+    const ts = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    onSave({ ...report, status: modalStatus, notes: modalNotes, timestamp: ts });
+    onClose();
   };
-
-  // 5. PROSES PENAPISAN CARIAN (SEARCH FILTER)
-  const filteredLaporan = laporanDatabase.filter(report => {
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return true;
-    return (
-      report.ref.toLowerCase().includes(query) ||
-      report.aduan.toLowerCase().includes(query) ||
-      report.title.toLowerCase().includes(query)
-    );
-  });
 
   return (
-    <section className="view-panel">
-      
-      {/* HEADER UTAMA HALAMAN */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-heading">Senarai Pengurusan Laporan Aktif</h1>
-          <p className="page-subheading">Sistem pemantauan status tugasan laporan bagi urusan rasmi Pejabat Daerah Kluang.</p>
-        </div>
-      </div>
+    <div className="case-modal-overlay show" onClick={onClose}>
+      <div className="case-modal-box" onClick={(e) => e.stopPropagation()}>
 
-      {/* GRID KAD STATISTIK */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Jumlah Laporan</span>
-            <span className="stat-value">{total}</span>
+        <div className="case-modal-header">
+          <div>
+            <div className="case-modal-id-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <span className="case-modal-id">{report.ref}</span>
+            </div>
+            <div className="case-modal-title">{report.title}</div>
+            <div className="case-modal-category">{report.aduan}</div>
           </div>
-          <div className="stat-icon icon-total">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Belum Tindakan</span>
-            <span className="stat-value">{pending}</span>
-          </div>
-          <div className="stat-icon icon-pending">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          </div>
+          <button className="case-modal-close-btn" onClick={onClose}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Dalam Proses</span>
-            <span className="stat-value">{progress}</span>
-          </div>
-          <div className="stat-icon icon-progress">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-          </div>
-        </div>
+        <div className="case-modal-body">
 
-        <div className="stat-card">
-          <div className="stat-info">
-            <span className="stat-label">Selesai & Dihantar</span>
-            <span className="stat-value">{completed}</span>
+          {/* Pilih Status */}
+          <div>
+            <div className="case-modal-section-label">Sila Pilih Status Baharu</div>
+            <select
+              value={modalStatus}
+              onChange={(e) => setModalStatus(e.target.value)}
+              style={{
+                width: '100%', padding: '8px 10px',
+                border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+                fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '12.5px',
+                color: 'var(--text-primary)', background: 'var(--white)', outline: 'none',
+              }}
+            >
+              <option value="Pending">Belum Diambil Tindakan (Pending)</option>
+              <option value="In Progress">Dalam Proses Tindakan (In Progress)</option>
+              <option value="Completed">Selesai & Disahkan (Completed)</option>
+            </select>
           </div>
-          <div className="stat-icon icon-completed">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </div>
-        </div>
-      </div>
 
-      {/* PANEL JADUAL & BAR CARIAN */}
-      <div className="table-panel">
-        
-        {/* BAR CARIAN SAHAJA (Eksport/Cetak & Filter dibuang) */}
-        <div style={{ padding: '16px 24px', background: '#ffffff', borderBottom: '1px solid var(--border-light)' }}>
-          <div style={{ position: 'relative', width: '100%', maxWidth: '320px' }}>
-            <input 
-              type="text" 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari rujukan, aduan atau laporan..." 
-              style={{ width: '100%', padding: '9px 12px 9px 38px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+          <div className="case-modal-divider"></div>
+
+          {/* Nota */}
+          <div>
+            <div className="case-modal-section-label">Nota / Justifikasi Kemaskini</div>
+            <textarea
+              value={modalNotes}
+              onChange={(e) => setModalNotes(e.target.value)}
+              placeholder="Masukkan nota semakan, ulasan atau catatan ringkas..."
+              rows={4}
+              style={{
+                width: '100%', padding: '8px 10px',
+                border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+                fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '12.5px',
+                color: 'var(--text-primary)', background: 'var(--white)',
+                outline: 'none', resize: 'vertical', boxSizing: 'border-box',
+              }}
             />
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="2.5" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+
+        </div>
+
+        <div className="case-modal-footer" style={{ gap: '8px' }}>
+          <button className="btn-secondary" onClick={onClose}>Batal</button>
+          <button className="btn-tindakan" onClick={handleSubmit}>Simpan Kemaskini</button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════
+   MAIN PAGE — PPL Status Kerja
+   ════════════════════════════════════════════ */
+export default function PPLStatusKerja() {
+  const [laporanDatabase, setLaporanDatabase] = useState(pplLaporanData);
+  const [activeReport, setActiveReport] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const pending   = laporanDatabase.filter(r => r.status === "Pending").length;
+  const progress  = laporanDatabase.filter(r => r.status === "In Progress").length;
+  const completed = laporanDatabase.filter(r => r.status === "Completed").length;
+  const overdue = laporanDatabase.filter(r => r.status === "Overdue").length;
+
+  const filtered = laporanDatabase.filter(r => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return r.ref.toLowerCase().includes(q) || r.aduan.toLowerCase().includes(q) || r.title.toLowerCase().includes(q);
+  });
+
+  const handleSave = (updated) => {
+    setLaporanDatabase(prev => prev.map(r => r.ref === updated.ref ? updated : r));
+  };
+
+  return (
+    <>
+    <Navbar
+        title="Status Kerja"
+        breadcrumbItems={["e-Urus PDK", "Subsistem 4", "Senarai Laporan Aktif"]}
+        userName="Zulkifli Hassan"
+        userRole="Peg. Penyedia Laporan"
+    />
+
+      <div className="content">
+
+        {/* HEADER */}
+        <div className="page-header">
+          <div>
+            <h1 className="page-heading">Senarai Pengurusan Laporan Aktif</h1>
+            <p className="page-subheading">
+              Sistem pemantauan status tugasan laporan bagi urusan rasmi Pejabat Daerah Kluang.
+            </p>
           </div>
         </div>
 
-        {/* STRUKTUR JADUAL FIZIKAL */}
-        <div style={{ overflowX: 'auto' }}>
+        {/* SUMMARY STRIP */}
+<div className="summary-strip" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+  <div className="summary-card">
+    <div className="summary-icon" style={{ borderColor: 'var(--amber-border)', background: 'var(--amber-bg)' }}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <div>
+      <div className="summary-val">{pending}</div>
+      <div className="summary-label">Belum Diambil Tindakan</div>
+    </div>
+  </div>
+
+  <div className="summary-card">
+    <div className="summary-icon summary-icon-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    <div>
+      <div className="summary-val">{progress}</div>
+      <div className="summary-label">Dalam Proses</div>
+    </div>
+  </div>
+
+  <div className="summary-card">
+    <div className="summary-icon" style={{ borderColor: 'var(--green-border)', background: 'var(--green-bg)' }}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <div>
+      <div className="summary-val">{completed}</div>
+      <div className="summary-label">Selesai & Dihantar</div>
+    </div>
+  </div>
+
+  <div className="summary-card">
+    <div className="summary-icon" style={{ borderColor: 'var(--red-border)', background: 'var(--red-bg)' }}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+    </div>
+    <div>
+      <div className="summary-val">{overdue}</div>
+      <div className="summary-label">Melebihi Tempoh</div>
+    </div>
+  </div>
+</div>
+
+        {/* TABLE PANEL */}
+        <div className="table-panel">
+          <div className="table-panel-header">
+            <div>
+              <div className="table-panel-title">Senarai Laporan Aktif</div>
+              <div className="table-panel-sub">Menunjukkan {filtered.length} laporan dalam sistem</div>
+            </div>
+            <div className="search-input-wrap search-input-sk-wrap">
+              <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Cari rujukan, aduan atau laporan..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+
           <table className="data-table">
             <thead>
-              <tr>
-                <th>No. Rujukan Fail</th>
-                <th>Tajuk Aduan</th>
-                <th>Nama Laporan</th>
-                <th>Status Semasa</th>
-                <th>Tarikh Kemaskini</th>
-                <th style={{ textAlign: 'right' }}>Tindakan</th>
-              </tr>
+                <tr>
+                    <th>No. Rujukan</th>
+                    <th>Kes</th>
+                    <th>Nama Laporan</th>
+                    <th>Tarikh Terima</th>
+                    <th>Tempoh Akhir</th>
+                    <th>Status Semasa</th>
+                    <th style={{ textAlign: 'right' }}>Tindakan</th>
+                </tr>
             </thead>
             <tbody>
-              {filteredLaporan.map((report) => {
-                let statusClass = "badge-pending";
-                let statusLabel = "Belum Diambil Tindakan";
+                {filtered.map((report) => (
+                <tr key={report.ref}>
+                <td className="td-ref">{report.ref}</td>
+                <td>
+                    <div className="td-tajuk" >{report.aduan}</div>
+                    <div className="td-tajuk-sub">{report.subtitle}</div>
+                </td>
+        
+                <td>
+                    <div className="td-tajuk">{report.title}</div>
+                    {report.notes && (
+                    <div className="td-tajuk-sub" style={{ marginTop: '5px', fontStyle: 'italic', borderLeft: '2px solid var(--border)', paddingLeft: '6px' }}>
+                    Nota: {report.notes}
+                    </div>
+                    )}
+                </td>
+                <td className="td-date">{report.arrived}</td>
+                <td className={`td-tempoh ${report.status === "Overdue" ? "tempoh-overdue" : "tempoh-normal"}`}>
+                    {report.deadline}
+                    {report.status === "Overdue" && (
+                <svg
+                    className="deadline-warning-icon"
+                    width="11" height="11" viewBox="0 0 24 24" fill="none"
+                    stroke="var(--red)" strokeWidth="2.5"
+                >
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                )}
+                </td>
+                <td><LaporanStatusBadge status={report.status} /></td>
+                <td style={{ textAlign: 'right' }}>
+                <button className="btn-tindakan" onClick={() => setActiveReport(report)}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Kemaskini
+                </button>
+            </td>
+            </tr>
+            ))}
 
-                if (report.status === "In Progress") { statusClass = "badge-progress"; statusLabel = "Dalam Proses"; }
-                if (report.status === "Completed") { statusClass = "badge-completed"; statusLabel = "Selesai & Dihantar"; }
-
-                return (
-                  <tr key={report.ref}>
-                    <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, fontSize: '13px', color: '#103559' }}>{report.ref}</td>
-                    <td style={{ color: '#b54708', fontWeight: 500, maxWidth: '220px', lineHeight: 1.4 }}>{report.aduan}</td>
-                    <td style={{ maxWidth: '280px', lineHeight: 1.4 }}>
-                      <div><strong>{report.title}</strong></div>
-                      {report.notes && (
-                        <div style={{ fontSize: '11px', color: '#667085', marginTop: '6px', fontStyle: 'italic', background: '#f9fafb', padding: '4px 8px', borderLeft: '2px solid #d0d5dd', borderRadius: '2px' }}>
-                          Nota: {report.notes}
-                        </div>
-                      )}
-                    </td>
-                    <td><span className={`badge ${statusClass}`}>{statusLabel}</span></td>
-                    <td style={{ color: '#667085', fontSize: '12px', fontFamily: "'IBM Plex Mono', monospace" }}>{report.timestamp}</td>
-                    <td style={{ textAlign: 'right' }}>
-                      <button className="action-trigger-btn" style={{ background: '#0d2137', color: 'white', border: 'none', padding: '7px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }} onClick={() => openUpdateModal(report)}>
-                        Kemaskini Status
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-              
-              {/* JIKA REKOD TIDAK DITEMUI */}
-              {filteredLaporan.length === 0 && (
-                <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', color: 'var(--text-soft)', padding: '24px' }}>
-                    Tiada rekod laporan ditemui bagi carian "{searchQuery}".
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+    {filtered.length === 0 && (
+      <tr>
+        <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-soft)', padding: '28px' }}>
+          Tiada rekod laporan ditemui bagi carian "{searchQuery}".
+        </td>
+      </tr>
+    )}
+  </tbody>
+</table>
         </div>
+
       </div>
 
-      {/* POP-UP MODAL PENGEMASKINIAN STATUS (RENDER SEPERTI DIKENDALI) */}
-      {isModalOpen && activeReport && (
-        <div className="modal-backdrop" style={{ display: 'flex' }}>
-          <div className="modal-content">
-            <h3 className="modal-title">Pindaan Urusan: {activeReport.title}</h3>
-            <p className="modal-subtitle">No. Rujukan Fail: {activeReport.ref}</p>
-            
-            <form onSubmit={submitStatusUpdate}>
-              <div className="form-group">
-                <label className="form-label">Sila Pilih Status Baharu</label>
-                <select 
-                  className="form-control" 
-                  value={modalStatus} 
-                  onChange={(e) => setModalStatus(e.target.value)}
-                >
-                  <option value="Pending">Belum Diambil Tindakan (Pending)</option>
-                  <option value="In Progress">Dalam Proses Tindakan (In Progress)</option>
-                  <option value="Completed">Selesai & Disahkan (Completed)</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Nota / Justifikasi Kemaskini</label>
-                <textarea 
-                  className="form-control text-area" 
-                  value={modalNotes}
-                  onChange={(e) => setModalNotes(e.target.value)}
-                  placeholder="Masukkan nota semakan, ulasan atau catatan ringkas..."
-                />
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="btn btn-secondary">Batal</button>
-                <button type="submit" className="btn btn-primary">Simpan Kemaskini</button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* MODAL */}
+      {activeReport && (
+        <UpdateModal
+          report={activeReport}
+          onClose={() => setActiveReport(null)}
+          onSave={handleSave}
+        />
       )}
-
-    </section>
+    </>
   );
 }
