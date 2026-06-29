@@ -1,17 +1,34 @@
 import { useState } from "react";
 import Navbar from "../../components/common/navbar";
-import { pplLaporanData, kbPengagihanStatusData } from "../../data/statusKerjaData";
-import { officerList } from "../../data/tugasanData";
+import { pplLaporanData } from "../../data/statusKerjaData";
+import { initialTugasanList } from "../../data/tugasanData";
 import "../../styles/pages/StatusKerja.css";
 
-/* ─── Badge status pengagihan KB ─── */
-function KBStatusBadge({ status }) {
+/* ─── Data khusus KB — extend initialTugasanList dengan 1 entry belum diagihkan ─── */
+const kbTugasanList = [
+  ...initialTugasanList,
+  {
+    id: "TGS-2026-0150",
+    caseRef: "PDK/KLG/2026/0847",
+    caseTitle: "Banjir Kilat — Jalan Dato' Abdul Rahman",
+    officer: "",
+    instruction: "",
+    priority: "Tinggi",
+    dateGiven: "29 Jun 2026",
+    deadline: "05 Jul 2026",
+    status: "Belum Diagihkan",
+  },
+];
+
+/* ─── Badge status tugasan KB ─── */
+function TugasanStatusBadge({ status }) {
   const map = {
-    "Sudah Diagihkan":  { cls: "badge-received", label: "Sudah Diagihkan" },
-    "Sedang Diagihkan": { cls: "badge-progress", label: "Sedang Diagihkan" },
+    "Menunggu Laporan": { cls: "badge-progress", label: "Sudah Diagihkan" },
+    "Selesai":          { cls: "badge-received", label: "Sudah Diagihkan" },
+    "Lewat":            { cls: "badge-overdue",  label: "Sudah Diagihkan (Lewat)" },
     "Belum Diagihkan":  { cls: "badge-pending",  label: "Belum Diagihkan" },
   };
-  const conf = map[status] || map["Belum Diagihkan"];
+  const conf = map[status] || { cls: "badge-pending", label: "Belum Diagihkan" };
   return (
     <span className={`status-badge ${conf.cls}`}>
       <span className="badge-dot"></span>
@@ -37,18 +54,9 @@ function LaporanStatusBadge({ status }) {
   );
 }
 
-/* ─── Modal Kemaskini Status Pengagihan KB ─── */
-function KemaskiniModal({ kes, onClose, onSave }) {
-  const [modalStatus, setModalStatus] = useState(kes.status);
-  const [modalAssignedTo, setModalAssignedTo] = useState(kes.assignedTo);
-  const [modalNotes, setModalNotes] = useState(kes.notes);
-
-  const handleSubmit = () => {
-    const now = new Date();
-    const ts = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-    onSave({ ...kes, status: modalStatus, assignedTo: modalAssignedTo, notes: modalNotes, timestamp: ts });
-    onClose();
-  };
+/* ─── Modal Butiran Tugasan KB (read-only) ─── */
+function ButiranTugasanModal({ tugasan, onClose }) {
+  if (!tugasan) return null;
 
   return (
     <div className="case-modal-overlay show" onClick={onClose}>
@@ -58,13 +66,13 @@ function KemaskiniModal({ kes, onClose, onSave }) {
           <div>
             <div className="case-modal-id-row">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
+                <path d="M22 2L11 13"/>
+                <path d="M22 2L15 22 11 13 2 9l20-7z"/>
               </svg>
-              <span className="case-modal-id">{kes.ref}</span>
+              <span className="case-modal-id">{tugasan.id}</span>
             </div>
-            <div className="case-modal-title">{kes.title}</div>
-            <div className="case-modal-category">{kes.subtitle}</div>
+            <div className="case-modal-title">{tugasan.caseTitle}</div>
+            <div className="case-modal-category">{tugasan.caseRef}</div>
           </div>
           <button className="case-modal-close-btn" onClick={onClose}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -76,80 +84,69 @@ function KemaskiniModal({ kes, onClose, onSave }) {
 
         <div className="case-modal-body">
 
-          {/* Status Pengagihan */}
           <div>
-            <div className="case-modal-section-label">Status Pengagihan</div>
-            <select
-              value={modalStatus}
-              onChange={(e) => setModalStatus(e.target.value)}
-              style={{
-                width: '100%', padding: '8px 10px',
-                border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
-                fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '12.5px',
-                color: 'var(--text-primary)', background: 'var(--white)', outline: 'none',
-              }}
-            >
-              <option value="Belum Diagihkan">Belum Diagihkan</option>
-              <option value="Sedang Diagihkan">Sedang Diagihkan</option>
-              <option value="Sudah Diagihkan">Sudah Diagihkan</option>
-            </select>
+            <div className="case-modal-section-label">Status Tugasan</div>
+            <TugasanStatusBadge status={tugasan.status} />
           </div>
 
           <div className="case-modal-divider"/>
 
-          {/* Pegawai Ditugaskan */}
           <div>
-            <div className="case-modal-section-label">Pegawai Penyedia Laporan Ditugaskan</div>
-            <select
-              value={modalAssignedTo}
-              onChange={(e) => setModalAssignedTo(e.target.value)}
-              style={{
-                width: '100%', padding: '8px 10px',
-                border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
-                fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '12.5px',
-                color: 'var(--text-primary)', background: 'var(--white)', outline: 'none',
-              }}
-            >
-              <option value="">— Pilih pegawai —</option>
-              {officerList.map((name) => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
+            <div className="case-modal-section-label">Maklumat Tugasan</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', fontSize: '12.5px' }}>
+                <span style={{ color: 'var(--text-soft)', width: '120px', flexShrink: 0 }}>Pegawai</span>
+                <span style={{ color: 'var(--text-primary)' }}>
+                  {tugasan.officer || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Belum ditetapkan</span>}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', fontSize: '12.5px' }}>
+                <span style={{ color: 'var(--text-soft)', width: '120px', flexShrink: 0 }}>Tarikh Diberi</span>
+                <span style={{ color: 'var(--text-primary)', fontFamily: "'IBM Plex Mono', monospace" }}>{tugasan.dateGiven}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', fontSize: '12.5px' }}>
+                <span style={{ color: 'var(--text-soft)', width: '120px', flexShrink: 0 }}>Tarikh Akhir</span>
+                <span style={{
+                  color: tugasan.status === "Lewat" ? 'var(--red)' : 'var(--text-primary)',
+                  fontWeight: tugasan.status === "Lewat" ? 600 : 400,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                }}>{tugasan.deadline}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', fontSize: '12.5px' }}>
+                <span style={{ color: 'var(--text-soft)', width: '120px', flexShrink: 0 }}>Keutamaan</span>
+                <span style={{ color: 'var(--text-primary)' }}>{tugasan.priority}</span>
+              </div>
+            </div>
           </div>
 
-          <div className="case-modal-divider"/>
-
-          {/* Nota */}
-          <div>
-            <div className="case-modal-section-label">Nota Pengagihan</div>
-            <textarea
-              value={modalNotes}
-              onChange={(e) => setModalNotes(e.target.value)}
-              placeholder="Masukkan nota berkaitan pengagihan tugasan untuk kes ini..."
-              rows={4}
-              style={{
-                width: '100%', padding: '8px 10px',
-                border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
-                fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '12.5px',
-                color: 'var(--text-primary)', background: 'var(--white)',
-                outline: 'none', resize: 'vertical', boxSizing: 'border-box',
-              }}
-            />
-          </div>
+          {tugasan.instruction && (
+            <>
+              <div className="case-modal-divider"/>
+              <div>
+                <div className="case-modal-section-label">Arahan Tugasan</div>
+                <div style={{
+                  padding: '10px 14px', background: 'var(--surface-2)',
+                  border: '1px solid var(--border-light)', borderLeft: '3px solid var(--navy)',
+                  borderRadius: 'var(--radius-md)', fontSize: '12.5px',
+                  color: 'var(--text-mid)', lineHeight: 1.6,
+                }}>
+                  {tugasan.instruction}
+                </div>
+              </div>
+            </>
+          )}
 
         </div>
 
-        <div className="case-modal-footer" style={{ gap: '8px' }}>
-          <button className="btn-secondary" onClick={onClose}>Batal</button>
-          <button className="btn-tindakan" onClick={handleSubmit}>Simpan Kemaskini</button>
+        <div className="case-modal-footer">
+          <button className="btn-secondary" onClick={onClose}>Tutup</button>
         </div>
-
       </div>
     </div>
   );
 }
 
-/* ─── Modal Butiran PPL ─── */
+/* ─── Modal Butiran PPL (read-only) ─── */
 function ButiranPPLModal({ report, onClose }) {
   if (!report) return null;
 
@@ -187,7 +184,6 @@ function ButiranPPLModal({ report, onClose }) {
 
         <div className="case-modal-body">
 
-          {/* Status */}
           <div>
             <div className="case-modal-section-label">Status Semasa Tugasan PPL</div>
             <div style={{
@@ -207,7 +203,6 @@ function ButiranPPLModal({ report, onClose }) {
 
           <div className="case-modal-divider"/>
 
-          {/* Maklumat */}
           <div>
             <div className="case-modal-section-label">Maklumat Laporan</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -261,16 +256,15 @@ function ButiranPPLModal({ report, onClose }) {
    MAIN PAGE — KB Status Kerja (2 Tabs)
    ════════════════════════════════════════════ */
 export default function KBStatusKerja() {
-  const [activeTab, setActiveTab] = useState("tugasan");
-  const [kesDatabase, setKesDatabase] = useState(kbPengagihanStatusData);
-  const [activeKemaskini, setActiveKemaskini] = useState(null);
-  const [activePPL, setActivePPL] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab]         = useState("tugasan");
+  const [activeTugasan, setActiveTugasan] = useState(null);
+  const [activePPL, setActivePPL]         = useState(null);
+  const [searchQuery, setSearchQuery]     = useState("");
 
   // Tab 1 stats
-  const sudah   = kesDatabase.filter(k => k.status === "Sudah Diagihkan").length;
-  const sedang  = kesDatabase.filter(k => k.status === "Sedang Diagihkan").length;
-  const belum   = kesDatabase.filter(k => k.status === "Belum Diagihkan").length;
+  const tugasanSudah = kbTugasanList.filter(t => t.status !== "Belum Diagihkan").length;
+  const tugasanBelum = kbTugasanList.filter(t => t.status === "Belum Diagihkan").length;
+  const tugasanLewat = kbTugasanList.filter(t => t.status === "Lewat").length;
 
   // Tab 2 stats
   const pplPending   = pplLaporanData.filter(r => r.status === "Pending").length;
@@ -278,21 +272,27 @@ export default function KBStatusKerja() {
   const pplCompleted = pplLaporanData.filter(r => r.status === "Completed").length;
   const pplOverdue   = pplLaporanData.filter(r => r.status === "Overdue").length;
 
-  const filteredKes = kesDatabase.filter(k => {
+  // ── Fixed filter — guard against empty officer field ──
+  const filteredTugasan = kbTugasanList.filter(t => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
-    return k.ref.toLowerCase().includes(q) || k.title.toLowerCase().includes(q) || k.assignedTo.toLowerCase().includes(q);
+    return (
+      (t.id || "").toLowerCase().includes(q) ||
+      (t.caseRef || "").toLowerCase().includes(q) ||
+      (t.caseTitle || "").toLowerCase().includes(q) ||
+      (t.officer || "").toLowerCase().includes(q)
+    );
   });
 
   const filteredPPL = pplLaporanData.filter(r => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
-    return r.ref.toLowerCase().includes(q) || r.aduan.toLowerCase().includes(q) || r.title.toLowerCase().includes(q);
+    return (
+      r.ref.toLowerCase().includes(q) ||
+      r.aduan.toLowerCase().includes(q) ||
+      r.title.toLowerCase().includes(q)
+    );
   });
-
-  const handleSaveKemaskini = (updated) => {
-    setKesDatabase(prev => prev.map(k => k.ref === updated.ref ? updated : k));
-  };
 
   const switchTab = (tab) => { setActiveTab(tab); setSearchQuery(""); };
 
@@ -307,12 +307,11 @@ export default function KBStatusKerja() {
 
       <div className="content">
 
-        {/* HEADER */}
         <div className="page-header">
           <div>
             <h1 className="page-heading">Status Kerja</h1>
             <p className="page-subheading">
-              Pantau status pengagihan tugasan anda dan kemajuan laporan Pegawai Penyedia Laporan di bawah bahagian anda.
+              Pantau status tugasan yang telah diagihkan dan kemajuan laporan Pegawai Penyedia Laporan di bawah bahagian anda.
             </p>
           </div>
         </div>
@@ -354,20 +353,8 @@ export default function KBStatusKerja() {
                   </svg>
                 </div>
                 <div>
-                  <div className="summary-val">{sudah}</div>
+                  <div className="summary-val">{tugasanSudah}</div>
                   <div className="summary-label">Sudah Diagihkan</div>
-                </div>
-              </div>
-
-              <div className="summary-card">
-                <div className="summary-icon summary-icon-blue">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                  </svg>
-                </div>
-                <div>
-                  <div className="summary-val">{sedang}</div>
-                  <div className="summary-label">Sedang Diagihkan</div>
                 </div>
               </div>
 
@@ -380,8 +367,21 @@ export default function KBStatusKerja() {
                   </svg>
                 </div>
                 <div>
-                  <div className="summary-val">{belum}</div>
+                  <div className="summary-val">{tugasanBelum}</div>
                   <div className="summary-label">Belum Diagihkan</div>
+                </div>
+              </div>
+
+              <div className="summary-card">
+                <div className="summary-icon" style={{ borderColor: 'var(--red-border)', background: 'var(--red-bg)' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="summary-val">{tugasanLewat}</div>
+                  <div className="summary-label">Lewat</div>
                 </div>
               </div>
             </div>
@@ -389,8 +389,8 @@ export default function KBStatusKerja() {
             <div className="table-panel">
               <div className="table-panel-header">
                 <div>
-                  <div className="table-panel-title">Senarai Kes — Status Pengagihan</div>
-                  <div className="table-panel-sub">Menunjukkan {filteredKes.length} kes yang perlu diagihkan tugasan</div>
+                  <div className="table-panel-title">Senarai Tugasan Diagihkan</div>
+                  <div className="table-panel-sub">Menunjukkan {filteredTugasan.length} tugasan yang telah diagihkan kepada PPL</div>
                 </div>
                 <div className="search-input-wrap">
                   <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -399,7 +399,7 @@ export default function KBStatusKerja() {
                   </svg>
                   <input
                     type="text" className="search-input"
-                    placeholder="Cari rujukan, tajuk atau pegawai..."
+                    placeholder="Cari no. tugasan, pegawai atau kes..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -409,52 +409,60 @@ export default function KBStatusKerja() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>No. Rujukan</th>
+                    <th>No. Tugasan</th>
                     <th>Tajuk Kes</th>
                     <th>Pegawai Ditugaskan</th>
-                    <th>Tarikh Terima</th>
-                    <th>Kemaskini Akhir</th>
-                    <th>Status Pengagihan</th>
-                    <th style={{ textAlign: 'right' }}>Tindakan</th>
+                    <th>Tarikh Diberi</th>
+                    <th>Tarikh Akhir</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: 'right' }}>Butiran</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredKes.map(k => (
-                    <tr key={k.ref}>
-                      <td className="td-ref">{k.ref}</td>
+                  {filteredTugasan.map(t => (
+                    <tr key={t.id}>
+                      {/* ── Fixed: inline style to force visibility ── */}
+                      <td style={{
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontSize: '11.5px', fontWeight: 600,
+                        color: 'var(--navy)',
+                      }}>
+                        {t.id}
+                      </td>
                       <td>
-                        <div className="td-tajuk">{k.title}</div>
-                        <div className="td-tajuk-sub">{k.subtitle}</div>
-                        {k.notes && (
-                          <div className="td-tajuk-sub" style={{
-                            marginTop: '5px', fontStyle: 'italic',
-                            borderLeft: '2px solid var(--border)', paddingLeft: '6px',
-                          }}>
-                            Nota: {k.notes}
-                          </div>
-                        )}
+                        <div className="td-tajuk">{t.caseTitle}</div>
+                        <div className="td-tajuk-sub">{t.caseRef}</div>
                       </td>
                       <td className="td-date">
-                        {k.assignedTo || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Belum ditetapkan</span>}
+                        {t.officer || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Belum ditetapkan</span>}
                       </td>
-                      <td className="td-date">{k.arrived}</td>
-                      <td className="td-date" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11.5px' }}>{k.timestamp}</td>
-                      <td><KBStatusBadge status={k.status} /></td>
-                      <td style={{ textAlign: 'right' }}>
-                        <button className="btn-tindakan" onClick={() => setActiveKemaskini(k)}>
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      <td className="td-date">{t.dateGiven}</td>
+                      <td className={`td-tempoh ${t.status === "Lewat" ? "tempoh-overdue" : "tempoh-normal"}`}>
+                        {t.deadline}
+                        {t.status === "Lewat" && (
+                          <svg className="deadline-warning-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2.5">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
                           </svg>
-                          Kemaskini
+                        )}
+                      </td>
+                      <td><TugasanStatusBadge status={t.status} /></td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button className="btn-secondary" onClick={() => setActiveTugasan(t)}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                          </svg>
+                          Butiran
                         </button>
                       </td>
                     </tr>
                   ))}
-                  {filteredKes.length === 0 && (
+                  {filteredTugasan.length === 0 && (
                     <tr>
                       <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-soft)', padding: '28px' }}>
-                        Tiada kes ditemui bagi carian "{searchQuery}".
+                        Tiada tugasan ditemui bagi carian "{searchQuery}".
                       </td>
                     </tr>
                   )}
@@ -555,7 +563,13 @@ export default function KBStatusKerja() {
                 <tbody>
                   {filteredPPL.map(r => (
                     <tr key={r.ref}>
-                      <td className="td-ref">{r.ref}</td>
+                      <td style={{
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontSize: '11.5px', fontWeight: 600,
+                        color: 'var(--navy)',
+                      }}>
+                        {r.ref}
+                      </td>
                       <td>
                         <div className="td-tajuk">{r.aduan}</div>
                         <div className="td-tajuk-sub">{r.subtitle}</div>
@@ -600,11 +614,10 @@ export default function KBStatusKerja() {
       </div>
 
       {/* MODALS */}
-      {activeKemaskini && (
-        <KemaskiniModal
-          kes={activeKemaskini}
-          onClose={() => setActiveKemaskini(null)}
-          onSave={handleSaveKemaskini}
+      {activeTugasan && (
+        <ButiranTugasanModal
+          tugasan={activeTugasan}
+          onClose={() => setActiveTugasan(null)}
         />
       )}
       {activePPL && (
