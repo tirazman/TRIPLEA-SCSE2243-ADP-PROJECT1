@@ -88,7 +88,7 @@ function SubmissionInfo({ doc }) {
 }
 
 function AssignmentHistory({ assignedTo }) {
-  if (!assignedTo.length) return null;
+  if (!assignedTo || !assignedTo.length) return null;
 
   return (
     <div className="kj-history-box">
@@ -124,8 +124,9 @@ export default function KJPengagihanBahagian() {
   const [selectedDepts, setSelectedDepts] = useState([]);
   const [assignNote, setAssignNote] = useState("");
   
-  // Penambahan state baru untuk tempoh akhir
+  // State untuk tempoh akhir & keutamaan kes
   const [deadlineDate, setDeadlineDate] = useState("");
+  const [priority, setPriority] = useState("Sederhana"); // Tambah state keutamaan
 
   const [aiLoading, setAiLoading] = useState(false);
   const [loadingText, setLoadingText] = useState(AI_STEPS[0]);
@@ -175,6 +176,7 @@ export default function KJPengagihanBahagian() {
     setSelectedDepts([]);
     setAssignNote("");
     setDeadlineDate("");
+    setPriority("Sederhana"); // Reset kepada Sederhana bila tukar kes
     setAiResult(null);
     setHasSummarized(false);
     setAiLoading(false);
@@ -186,6 +188,7 @@ export default function KJPengagihanBahagian() {
     setSelectedDepts([]);
     setAssignNote("");
     setDeadlineDate("");
+    setPriority("Sederhana");
     setAiResult(null);
     setHasSummarized(false);
     setAiLoading(false);
@@ -214,7 +217,6 @@ export default function KJPengagihanBahagian() {
       if (stepTimerRef.current) clearInterval(stepTimerRef.current);
       const parsed = janaRingkasanLokal(selectedDoc);
       
-      // Tambah hardcoded data kategori aduan pada hasil jana AI secara lokal
       if (parsed && parsed.cadangan_bahagian) {
         parsed.cadangan_bahagian = parsed.cadangan_bahagian.map((dept, index) => {
           const kategoriMap = [
@@ -256,8 +258,9 @@ export default function KJPengagihanBahagian() {
           ? {
               ...d,
               status: "diproses",
+              priority: priority, // Simpan keutamaan kes ke dalam state data kes
               assignedTo: [
-                ...d.assignedTo,
+                ...(d.assignedTo || []),
                 { tarikh: formatToday(), jabatan: [...selectedDepts] },
               ],
             }
@@ -520,7 +523,6 @@ export default function KJPengagihanBahagian() {
                             >
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                                 <div className="kj-dept-name">{dept.nama_bahagian}</div>
-                                {/* 📌 Penambahan Kategori Aduan bagi setiap bahagian */}
                                 <span style={{ fontSize: "10px", background: "var(--navy-bg)", color: "var(--navy)", padding: "1px 6px", borderRadius: "4px", fontWeight: 600 }}>
                                   {dept.kategori_aduan || "Umum"}
                                 </span>
@@ -558,21 +560,40 @@ export default function KJPengagihanBahagian() {
                         )}
                       </div>
 
-                      {/* 📌 Penambahan Field Tempoh Akhir */}
                       {selectedDepts.length > 0 && (
-                        <div style={{ marginBottom: "12px" }}>
-                          <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-mid)", marginBottom: "4px" }}>
-                            Tempoh Akhir Pegawai Menyediakan Laporan <span style={{ color: "var(--red)" }}>*</span>
-                          </label>
-                          <input 
-                            type="date" 
-                            className="form-input"
-                            value={deadlineDate}
-                            onChange={(e) => setDeadlineDate(e.target.value)}
-                            style={{ width: "100%", padding: "8px 10px", fontSize: "12.5px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)" }}
-                            required
-                          />
-                        </div>
+                        <>
+                          {/* Input Tarikh Akhir */}
+                          <div style={{ marginBottom: "12px" }}>
+                            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-mid)", marginBottom: "4px" }}>
+                              Tempoh Akhir Pegawai Menyediakan Laporan <span style={{ color: "var(--red)" }}>*</span>
+                            </label>
+                            <input 
+                              type="date" 
+                              className="form-input"
+                              value={deadlineDate}
+                              onChange={(e) => setDeadlineDate(e.target.value)}
+                              style={{ width: "100%", padding: "8px 10px", fontSize: "12.5px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)" }}
+                              required
+                            />
+                          </div>
+
+                          {/* 📌 PENAMBAHAN BUTTON DROPDOWN KEUTAMAAN */}
+                          <div style={{ marginBottom: "12px" }}>
+                            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-mid)", marginBottom: "4px" }}>
+                              Tahap Keutamaan Kes <span style={{ color: "var(--red)" }}>*</span>
+                            </label>
+                            <select
+                              className="form-input"
+                              value={priority}
+                              onChange={(e) => setPriority(e.target.value)}
+                              style={{ width: "100%", padding: "8px 10px", fontSize: "12.5px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", backgroundColor: "white", cursor: "pointer" }}
+                            >
+                              <option value="Tinggi">Tinggi</option>
+                              <option value="Sederhana">Sederhana</option>
+                              <option value="Rendah">Rendah</option>
+                            </select>
+                          </div>
+                        </>
                       )}
 
                       <textarea
@@ -610,7 +631,7 @@ export default function KJPengagihanBahagian() {
             <div>
               <div className="kb-modal-title">Sahkan Pengagihan</div>
               <div className="kb-modal-subtitle">
-                Dokumen <strong>{selectedDoc?.id}</strong> akan diagihkan kepada bahagian berikut dengan tarikh akhir <strong>{deadlineDate}</strong>
+                Dokumen <strong>{selectedDoc?.id}</strong> akan diagihkan kepada bahagian berikut dengan tarikh akhir <strong>{deadlineDate}</strong> serta keutamaan <strong>{priority}</strong>
                 {assignNote.trim() ? ` serta nota: "${assignNote.trim()}"` : ""}.
               </div>
             </div>
