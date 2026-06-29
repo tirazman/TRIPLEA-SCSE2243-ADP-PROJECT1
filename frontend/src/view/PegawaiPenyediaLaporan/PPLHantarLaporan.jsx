@@ -184,8 +184,7 @@ export default function PPLHantarLaporan() {
         </div>
       ));
     };
-  
-
+    
   return (
     <>
       <Navbar
@@ -221,6 +220,7 @@ export default function PPLHantarLaporan() {
 
         {/* Stepper */}
             <div className="upload-stats-bar">
+              {/*Card 1: Case Ref */}
             <div className="upload-stat-card">
               <div className="upload-stat-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#1e4d8c" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
@@ -230,6 +230,7 @@ export default function PPLHantarLaporan() {
                 <div className="upload-stat-label">No. Rujukan Kes</div>
               </div>
             </div>
+            {/*Card 2: File Count */}
             <div className="upload-stat-card">
               <div className="upload-stat-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#b54708" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
@@ -239,6 +240,7 @@ export default function PPLHantarLaporan() {
                 <div className="upload-stat-label">Fail Dimuat Naik</div>
               </div>
             </div>
+            {/*Card 3: Valid Files */}
             <div className="upload-stat-card">
               <div className="upload-stat-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#027a48" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>

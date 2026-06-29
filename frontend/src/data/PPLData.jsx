@@ -16,6 +16,7 @@ export const assignedTasks = [
     dateGiven: "09 Jun 2026",
     deadline: "13 Jun 2026",
     status: "Menunggu Laporan",
+    keutamaan: "Rendah",
   },
   {
     id: "TGS-2026-0198",
@@ -27,6 +28,7 @@ export const assignedTasks = [
     dateGiven: "01 Jun 2026",
     deadline: "05 Jun 2026",
     status: "Melebihi Tempoh",
+    keutamaan: "Rendah",
   },
   {
     id: "TGS-2026-0203",
@@ -38,6 +40,7 @@ export const assignedTasks = [
     dateGiven: "11 Jun 2026",
     deadline: "17 Jun 2026",
     status: "Menunggu Laporan",
+    keutamaan: "Rendah",
   },
 ];
 
