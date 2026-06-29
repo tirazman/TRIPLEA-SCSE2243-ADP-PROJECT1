@@ -1,7 +1,10 @@
 // Dummy data for Pegawai Penyedia Laporan.
+// "currentOfficer" simulates the logged-in user — in a real app this
+// would come from auth/session context instead of being hardcoded.
 export const currentOfficer = "Amirul Haziq Abdullah";
 
 // ─── Tasks assigned by Ketua Bahagian to this officer ───
+// (Step 1 of the workflow: read instruction -> field work -> upload report)
 export const assignedTasks = [
   {
     id: "TGS-2026-0211",
@@ -12,7 +15,8 @@ export const assignedTasks = [
     kbName: "Farid Hakimi Mohd Noor",
     dateGiven: "09 Jun 2026",
     deadline: "13 Jun 2026",
-    keutamaan: "Tinggi",
+    status: "Menunggu Laporan",
+    keutamaan: "Rendah",
   },
   {
     id: "TGS-2026-0198",
@@ -23,7 +27,8 @@ export const assignedTasks = [
     kbName: "Nur Aisyah Rahman",
     dateGiven: "01 Jun 2026",
     deadline: "05 Jun 2026",
-    keutamaan: "Tinggi",
+    status: "Melebihi Tempoh",
+    keutamaan: "Rendah",
   },
   {
     id: "TGS-2026-0203",
@@ -34,7 +39,8 @@ export const assignedTasks = [
     kbName: "Hafiz Azlan Mohamad",
     dateGiven: "11 Jun 2026",
     deadline: "17 Jun 2026",
-    keutamaan: "Sederhana",
+    status: "Menunggu Laporan",
+    keutamaan: "Rendah",
   },
 ];
 
@@ -70,6 +76,8 @@ export const submittedReports = [
 ];
 
 // ─── Other officers assigned to the SAME case (grouped by caseRef) ───
+// A PPL can only see officers working on cases they themselves are
+// assigned to — never officers from unrelated cases.
 export const sameCaseOfficers = {
   "PDK/KLG/2026/0954": [
     { name: "Nur Syafiqah Ismail", jawatan: "Pegawai Penyedia Laporan", tugasan: "Temu bual penduduk terjejas", status: "Sedang Bertugas", lastUpdate: "21 Jun 2026" },
@@ -85,6 +93,8 @@ export const sameCaseOfficers = {
 };
 
 // ─── Laporan yang sedang dipantau/dikemaskini oleh PPL sendiri ───
+// Digunakan dalam page "Status Kerja" — setiap entri di sini sepadan
+// dengan satu tugasan/kes yang sama seperti dalam assignedTasks di atas.
 export const pplLaporanData = [
   {
     ref: "PDK/KLG/2026/0954",
@@ -127,4 +137,3 @@ export const pplLaporanData = [
     notes: "Laporan telah disahkan dan dihantar kepada Ketua Bahagian untuk tindakan selanjutnya.",
   },
 ];
-

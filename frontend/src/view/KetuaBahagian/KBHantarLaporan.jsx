@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../../components/common/navbar";
-import "../../styles/pages/KJPenerimaanLaporan.css";
+import "../../styles/pages/KBHantarLaporan.css";
 
 // --- UTILITY FUNCTIONS ---
 const formatBytes = (bytes) => {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/common/navbar";
-import { assignedTasks } from "../../data/pplData";
+import { assignedTasks } from "../../data/PPLData";
 import "../../styles/pages/PPLTugasanDetail.css";
 
 /* ─── Badge keutamaan (sama style dgn KB) ─── */
