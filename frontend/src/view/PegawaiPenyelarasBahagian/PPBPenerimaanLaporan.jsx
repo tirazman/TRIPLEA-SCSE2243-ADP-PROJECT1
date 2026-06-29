@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import Navbar from "../../components/common/navbar";
-import { caseList, departmentReports, caseDeptSubmissions, STRATEGI_MAPPING } from "../../data/caseData";
+import { caseList, caseDepartmentReports, caseDeptSubmissions, STRATEGI_MAPPING } from "../../data/caseData";
 import "../../styles/pages/PenerimaanLaporan.css";
 
 const ALLOWED_TYPES = [
@@ -181,9 +181,6 @@ function CaseListView({ cases, onOpenCase }) {
                     <button
                       className="btn-tindakan"
                       onClick={() => onOpenCase(c)}
-                      style={!allSubmitted ? { opacity: 0.55, cursor: "not-allowed" } : undefined}
-                      disabled={!allSubmitted}
-                      title={!allSubmitted ? `Menunggu ${c.totalDepts - submittedDepts.length} lagi bahagian untuk submit` : "Semak & Konsolidasi"}
                     >
                       <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -218,7 +215,10 @@ function DepartmentCard({ report, isOpen, onToggle }) {
             <div className="card-dept-sub">{report.subtitle}</div>
           </div>
         </div>
-        <span className="status-badge badge-received">Diterima</span>
+        {report.submitted
+          ? <span className="status-badge badge-received">Diterima</span>
+          : <span className="status-badge badge-pending">Belum Dihantar</span>
+        }
         <div className={`chevron-icon${isOpen ? " open" : ""}`}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9" />
@@ -234,24 +234,28 @@ function DepartmentCard({ report, isOpen, onToggle }) {
               ))}
             </tbody>
           </table>
-          <div className="attach-label">Lampiran</div>
-          {report.attachments.map((file) => (
-            <div className="attach-item" key={file.name}>
-              {file.type === "image" ? (
-                <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-              )}
-              {file.name}
-            </div>
-          ))}
+          {report.attachments.length > 0 && (
+            <>
+              <div className="attach-label">Lampiran</div>
+              {report.attachments.map((file) => (
+                <div className="attach-item" key={file.name}>
+                  {file.type === "image" ? (
+                    <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  )}
+                  {file.name}
+                </div>
+              ))}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -277,7 +281,7 @@ function ReportsPanel({ reports, openCards, onToggleCard, isConsolidating, onSta
             <div className="panel-subtitle">Klik untuk melihat butiran dan lampiran</div>
           </div>
         </div>
-        <div className="count-tag">{reports.length} / {reports.length}</div>
+        <div className="count-tag">{reports.filter(r => r.submitted).length} / {reports.length}</div>
       </div>
       <div className="panel-body">
         {reports.map((report) => (
@@ -618,7 +622,8 @@ export default function PPBPenerimaanLaporan() {
     }, 1000);
   };
 
-  // Compute allSubmitted for selected case
+  // Per-case reports and submission state
+  const caseReports = selectedCase ? (caseDepartmentReports[selectedCase.ref] || []) : [];
   const allSubmitted = selectedCase
     ? (caseDeptSubmissions[selectedCase.ref] || []).length === selectedCase.totalDepts
     : false;
@@ -629,8 +634,6 @@ export default function PPBPenerimaanLaporan() {
         title="Penerimaan Laporan"
         breadcrumbItems={["e-Urus PDK", "Subsistem 3", "Penerimaan Laporan"]}
         statusText={`${caseList.length} Kes Menunggu Tindakan`}
-        userName="Zulkifli Hasan"
-        userRole="Pegawai Penyelaras Bahagian"
       />
       <div className="content">
         {view === "list" ? (
@@ -639,7 +642,7 @@ export default function PPBPenerimaanLaporan() {
           <CaseDetailView
             caseItem={selectedCase}
             onBack={handleBackToList}
-            reports={departmentReports}
+            reports={caseReports}
             openCards={openCards}
             onToggleCard={handleToggleCard}
             isConsolidating={isConsolidating}
@@ -662,3 +665,4 @@ export default function PPBPenerimaanLaporan() {
     </>
   );
 }
+
