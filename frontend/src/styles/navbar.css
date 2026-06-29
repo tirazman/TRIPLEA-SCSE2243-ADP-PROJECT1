@@ -53,3 +53,34 @@
 .profile-name { font-size: 12px; font-weight: 600; color: var(--white); white-space: nowrap; }
 .profile-role { font-size: 10px; color: rgba(255,255,255,0.4); white-space: nowrap; }
 .profile-chevron svg { width: 12px; height: 12px; stroke: rgba(255,255,255,0.3); stroke-width: 2; }
+
+.profile-widget {
+  position: relative;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  padding: 5px 0;
+  z-index: 1000;
+  width: 120px;
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 8px 15px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: #d32f2f; /* Red for logout */
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}

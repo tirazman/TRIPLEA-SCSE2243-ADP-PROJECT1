@@ -6,8 +6,8 @@ export default function KBLaporanDihantar() {
       <Navbar
         title="Laporan Dihantar"
         breadcrumbItems={["e-Urus PDK", "Ketua Bahagian", "Laporan Dihantar"]}
-        userName="Hafizul Hakim"
-        userRole="Ketua Bahagian"
+        userName="En. Faizal Yusof"
+        userRole="Ketua Bahagian-Fizikal"
       />
       <div className="content">
         <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--navy)" }}>

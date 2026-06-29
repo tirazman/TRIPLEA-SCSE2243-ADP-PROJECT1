@@ -301,8 +301,8 @@ export default function KBStatusKerja() {
       <Navbar
         title="Status Kerja"
         breadcrumbItems={["e-Urus PDK", "Ketua Bahagian", "Status Kerja"]}
-        userName="Hafizul Hakim"
-        userRole="Ketua Bahagian"
+        userName="En. Faizal Yusof"
+        userRole="Ketua Bahagian-Fizikal"
       />
 
       <div className="content">

@@ -137,8 +137,8 @@ export default function PPLStatusKerja() {
     <Navbar
         title="Status Kerja"
         breadcrumbItems={["e-Urus PDK", "Subsistem 4", "Senarai Laporan Aktif"]}
-        userName="Zulkifli Hassan"
-        userRole="Peg. Penyedia Laporan"
+        userName="Amirul Haziq Abdullah"
+        userRole="Pegawai Penyedia Laporan"
     />
 
       <div className="content">

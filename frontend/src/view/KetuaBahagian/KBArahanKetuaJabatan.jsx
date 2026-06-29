@@ -374,7 +374,7 @@ export default function KBArahanKetuaJabatan() {
       <Navbar
         title={navTitle}
         breadcrumbItems={breadcrumb}
-        userName="Encik Rashdan bin Ismail"
+        userName="En. Faizal Yusof"
         userRole="Ketua Bahagian-Fizikal"
       />
 

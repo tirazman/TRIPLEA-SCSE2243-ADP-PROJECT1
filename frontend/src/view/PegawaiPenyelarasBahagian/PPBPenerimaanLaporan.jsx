@@ -629,6 +629,8 @@ export default function PPBPenerimaanLaporan() {
         title="Penerimaan Laporan"
         breadcrumbItems={["e-Urus PDK", "Subsistem 3", "Penerimaan Laporan"]}
         statusText={`${caseList.length} Kes Menunggu Tindakan`}
+        userName="Zulkifli Hasan"
+        userRole="Pegawai Penyelaras Bahagian"
       />
       <div className="content">
         {view === "list" ? (
