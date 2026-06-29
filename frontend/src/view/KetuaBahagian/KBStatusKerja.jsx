@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../../components/common/navbar";
 import { pplLaporanData, kbTugasanList } from "../../data/statusKerjaData";
 import "../../styles/pages/StatusKerja.css";
@@ -129,7 +129,7 @@ function ButiranTugasanModal({ tugasan, onClose }) {
   );
 }
 
-/* ─── Modal Butiran PPL (Kemas kini: Ditambah fail laporan untuk status Completed) ─── */
+/* ─── Modal Butiran PPL ─── */
 function ButiranPPLModal({ report, onClose }) {
   if (!report) return null;
 
@@ -190,10 +190,10 @@ function ButiranPPLModal({ report, onClose }) {
             <div className="case-modal-section-label">Maklumat Laporan</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {[
-                { label: "Tajuk Aduan",     value: report.aduan,     mono: false },
-                { label: "Nama Laporan",    value: report.title,     mono: false, bold: true },
-                { label: "Tarikh Terima",   value: report.arrived,   mono: true },
-                { label: "Tempoh Akhir",    value: report.deadline,  mono: true, red: report.status === "Overdue" },
+                { label: "Tajuk Aduan",     value: report.aduan,    mono: false },
+                { label: "Nama Laporan",    value: report.title,    mono: false, bold: true },
+                { label: "Tarikh Terima",   value: report.arrived,  mono: true },
+                { label: "Tempoh Akhir",    value: report.deadline, mono: true, red: report.status === "Overdue" },
                 { label: "Kemaskini Akhir", value: report.timestamp, mono: true },
               ].map(({ label, value, mono, bold, red }) => (
                 <div key={label} style={{ display: 'flex', gap: '8px', fontSize: '12.5px' }}>
@@ -225,7 +225,6 @@ function ButiranPPLModal({ report, onClose }) {
             </>
           )}
 
-          {/* 📌 PAPARAN FAIL LAPORAN DARIPADA PPL JIKA STATUS COMPLETED */}
           {report.status === "Completed" && (
             <>
               <div className="case-modal-divider"/>
@@ -272,6 +271,7 @@ export default function KBStatusKerja() {
   const [activeTugasan, setActiveTugasan] = useState(null);
   const [activePPL, setActivePPL]         = useState(null);
   const [searchQuery, setSearchQuery]     = useState("");
+  const [showToast, setShowToast]         = useState(false); // State kawalan paparan toast merah
 
   // Tab 1 stats
   const tugasanSudah = kbTugasanList.filter(t => t.status !== "Belum Diagihkan").length;
@@ -284,7 +284,13 @@ export default function KBStatusKerja() {
   const pplCompleted = pplLaporanData.filter(r => r.status === "Completed").length;
   const pplOverdue   = pplLaporanData.filter(r => r.status === "Overdue").length;
 
-  // ── Guard against empty officer field ──
+  // ── Auto-trigger makluman peringatan merah ──
+  useEffect(() => {
+    if (tugasanBelum > 0) {
+      setShowToast(true); // Memaparkan toast secara kekal sehingga diklik X
+    }
+  }, [tugasanBelum]);
+
   const filteredTugasan = kbTugasanList.filter(t => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
@@ -622,6 +628,36 @@ export default function KBStatusKerja() {
           </>
         )}
 
+      </div>
+
+      {/* 🔴 TOAST REMINDER MERAH (PENDING TASK) */}
+      <div 
+        className={`toast${showToast ? " show" : ""}`} 
+        style={{ borderLeft: "4px solid var(--red, #d92d20)" }}
+      >
+        <div className="toast-icon-wrap" style={{ background: "var(--red-bg, #fef3f2)" }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--red, #d92d20)" strokeWidth="2.5">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <div className="toast-body">
+          <div className="toast-title" style={{ color: "var(--red, #d92d20)" }}>Tindakan Diperlukan</div>
+          <div className="toast-msg">
+            Terdapat <strong>{tugasanBelum} kes aduan baharu</strong> yang belum diagihkan kepada Pegawai Penyedia Laporan (PPL).
+          </div>
+        </div>
+        {/* Butang pangkah manual untuk menutup */}
+        <button 
+          onClick={() => setShowToast(false)}
+          style={{
+            background: "none", border: "none", color: "var(--text-muted)",
+            cursor: "pointer", fontSize: "14px", padding: "0 4px", marginLeft: "auto"
+          }}
+        >
+          ✕
+        </button>
       </div>
 
       {/* MODALS */}
