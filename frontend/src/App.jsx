@@ -3,7 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./view/Auth/Login";
 
 import PTDashboard from "./view/PembantuTadbir/PTDashboard";
+
 import KJDashboard from "./view/KetuaJabatan/KJDashboard";
+import KJPenerimaanLaporan from "./view/KetuaJabatan/KJPenerimaanLaporan";
+import KJPengagihanBahagian from "./view/KetuaJabatan/KJPengagihanBahagian";
+import KJLaporanDihantar from "./view/KetuaJabatan/KJLaporanDihantar";
 
 import KBDashboard from "./view/KetuaBahagian/KBDashboard";
 import KBArahanKetuaJabatan from "./view/KetuaBahagian/KBArahanKetuaJabatan";
@@ -26,7 +30,14 @@ function App() {
         <Route path="/" element={<Login />} />
 
         <Route path="/pembantu-tadbir" element={<PTDashboard />} />
-        <Route path="/ketua-jabatan" element={<KJDashboard />} />
+
+        {/* Ketua Jabatan */}
+        <Route path="/ketua-jabatan" element={<KJDashboard />}>
+          <Route index element={<Navigate to="pengagihan-bahagian" replace />} />
+          <Route path="penerimaan-laporan" element={<KJPenerimaanLaporan />} />
+          <Route path="pengagihan-bahagian" element={<KJPengagihanBahagian />} />
+          <Route path="laporan-dihantar" element={<KJLaporanDihantar />} />
+        </Route>
 
         {/*Ketua Bahagian — nested so <Outlet /> inside KBDashboard (the layout wrapper) has somewhere to render the actual page.*/}
         <Route path="/ketua-bahagian" element={<KBDashboard />}>
