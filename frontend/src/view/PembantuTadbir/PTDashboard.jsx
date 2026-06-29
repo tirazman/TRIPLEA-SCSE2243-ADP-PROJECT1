@@ -17,18 +17,7 @@ const menuItems = [
       </svg>
     ),
   },
-  {
-    label: "Status Kerja",
-    path: "/pembantu-tadbir/status",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
-      </svg>
-    ),
-  },
+  
 ];
 
 export default function PTDashboard() {

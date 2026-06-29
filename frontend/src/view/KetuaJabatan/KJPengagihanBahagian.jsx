@@ -123,6 +123,10 @@ export default function KJPengagihanBahagian() {
   const [selectedDocId, setSelectedDocId] = useState(null);
   const [selectedDepts, setSelectedDepts] = useState([]);
   const [assignNote, setAssignNote] = useState("");
+  
+  // Penambahan state baru untuk tempoh akhir
+  const [deadlineDate, setDeadlineDate] = useState("");
+
   const [aiLoading, setAiLoading] = useState(false);
   const [loadingText, setLoadingText] = useState(AI_STEPS[0]);
   const [aiResult, setAiResult] = useState(null);
@@ -170,6 +174,7 @@ export default function KJPengagihanBahagian() {
     setSelectedDocId(doc.id);
     setSelectedDepts([]);
     setAssignNote("");
+    setDeadlineDate("");
     setAiResult(null);
     setHasSummarized(false);
     setAiLoading(false);
@@ -180,6 +185,7 @@ export default function KJPengagihanBahagian() {
     setSelectedDocId(null);
     setSelectedDepts([]);
     setAssignNote("");
+    setDeadlineDate("");
     setAiResult(null);
     setHasSummarized(false);
     setAiLoading(false);
@@ -207,6 +213,22 @@ export default function KJPengagihanBahagian() {
     summarizeTimerRef.current = setTimeout(() => {
       if (stepTimerRef.current) clearInterval(stepTimerRef.current);
       const parsed = janaRingkasanLokal(selectedDoc);
+      
+      // Tambah hardcoded data kategori aduan pada hasil jana AI secara lokal
+      if (parsed && parsed.cadangan_bahagian) {
+        parsed.cadangan_bahagian = parsed.cadangan_bahagian.map((dept, index) => {
+          const kategoriMap = [
+            "Infrastruktur & Awam",
+            "Kebajikan & Komuniti",
+            "Logistik & Keselamatan"
+          ];
+          return {
+            ...dept,
+            kategori_aduan: kategoriMap[index % kategoriMap.length]
+          };
+        });
+      }
+
       setAiResult(parsed);
       setHasSummarized(true);
       setAiLoading(false);
@@ -465,7 +487,7 @@ export default function KJPengagihanBahagian() {
                           onClick={handleSummarize}
                           disabled={aiLoading}
                         >
-                          {aiLoading ? "Menganalisis..." : hasSummarized ? "Jana Semula" : "Jana Ringkasan"}
+                          {aiLoading ? "Menganalisis..." : hasSummarized ? "Jana Semula" : "Jana Cadangan AI"}
                         </button>
                       </div>
                     </div>
@@ -479,7 +501,7 @@ export default function KJPengagihanBahagian() {
 
                     {!aiLoading && !hasSummarized && (
                       <div className="kj-ai-placeholder">
-                        Klik &quot;Jana Ringkasan&quot; untuk analisis AI pada fail dokumen ini.
+                        Klik &quot;Jana Cadangan AI&quot; untuk analisis AI pada fail dokumen ini.
                       </div>
                     )}
 
@@ -496,7 +518,13 @@ export default function KJPengagihanBahagian() {
                               className={`kj-dept-card${selectedDepts.includes(dept.nama_bahagian) ? " chosen" : ""}`}
                               onClick={() => toggleDept(dept.nama_bahagian)}
                             >
-                              <div className="kj-dept-name">{dept.nama_bahagian}</div>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                <div className="kj-dept-name">{dept.nama_bahagian}</div>
+                                {/* 📌 Penambahan Kategori Aduan bagi setiap bahagian */}
+                                <span style={{ fontSize: "10px", background: "var(--navy-bg)", color: "var(--navy)", padding: "1px 6px", borderRadius: "4px", fontWeight: 600 }}>
+                                  {dept.kategori_aduan || "Umum"}
+                                </span>
+                              </div>
                               <div className="kj-dept-reason">{dept.sebab}</div>
                               <div className="kj-conf-bar-wrap">
                                 <div className="kj-conf-bar" style={{ width: `${dept.keyakinan}%` }} />
@@ -530,6 +558,23 @@ export default function KJPengagihanBahagian() {
                         )}
                       </div>
 
+                      {/* 📌 Penambahan Field Tempoh Akhir */}
+                      {selectedDepts.length > 0 && (
+                        <div style={{ marginBottom: "12px" }}>
+                          <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-mid)", marginBottom: "4px" }}>
+                            Tempoh Akhir Pegawai Menyediakan Laporan <span style={{ color: "var(--red)" }}>*</span>
+                          </label>
+                          <input 
+                            type="date" 
+                            className="form-input"
+                            value={deadlineDate}
+                            onChange={(e) => setDeadlineDate(e.target.value)}
+                            style={{ width: "100%", padding: "8px 10px", fontSize: "12.5px", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)" }}
+                            required
+                          />
+                        </div>
+                      )}
+
                       <textarea
                         className="form-textarea"
                         placeholder="Nota tambahan kepada bahagian (pilihan)..."
@@ -541,7 +586,7 @@ export default function KJPengagihanBahagian() {
                         type="button"
                         className="btn-primary-submit"
                         style={{ width: "100%", justifyContent: "center" }}
-                        disabled={selectedDepts.length === 0}
+                        disabled={selectedDepts.length === 0 || !deadlineDate}
                         onClick={() => setShowConfirm(true)}
                       >
                         Agih ke Bahagian
@@ -565,8 +610,8 @@ export default function KJPengagihanBahagian() {
             <div>
               <div className="kb-modal-title">Sahkan Pengagihan</div>
               <div className="kb-modal-subtitle">
-                Dokumen <strong>{selectedDoc?.id}</strong> akan diagihkan kepada bahagian berikut
-                {assignNote.trim() ? ` dengan nota: "${assignNote.trim()}"` : ""}.
+                Dokumen <strong>{selectedDoc?.id}</strong> akan diagihkan kepada bahagian berikut dengan tarikh akhir <strong>{deadlineDate}</strong>
+                {assignNote.trim() ? ` serta nota: "${assignNote.trim()}"` : ""}.
               </div>
             </div>
             <button type="button" className="kb-modal-close-btn" onClick={() => setShowConfirm(false)}>

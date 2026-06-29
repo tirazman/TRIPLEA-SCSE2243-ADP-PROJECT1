@@ -6,6 +6,8 @@ export default function PPBLaporanDihantar() {
       <Navbar
         title="Laporan Dihantar"
         breadcrumbItems={["e-Urus PDK", "Subsistem 3", "Laporan Dihantar"]}
+        userName="Zulkifli Hasan"
+        userRole="Pegawai Penyelaras Bahagian"
       />
       <div className="content">
         <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--navy)", marginBottom: 8 }}>

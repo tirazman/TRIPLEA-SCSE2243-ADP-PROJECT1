@@ -278,7 +278,9 @@ export const pplLaporanData = [
 ];
 
 
+// DATA ONLY FOR KB
 
+/* ─── Tab: "Pengagihan" (Ketua Bahagian — agihan tugasan ke PPL) ─── */
 export const kbPengagihanStatusData = [
   {
     ref: "PDK/KLG/2026/0912",

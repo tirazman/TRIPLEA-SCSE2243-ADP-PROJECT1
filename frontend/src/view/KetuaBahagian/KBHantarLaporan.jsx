@@ -178,8 +178,8 @@ export default function KBHantarLaporan() {
       <Navbar
         title={`Muat Naik Laporan — ${caseId || "Aduan"}`}
         breadcrumbItems={["e-Urus PDK", "Ketua Bahagian", "Arahan Ketua Jabatan", "Muat Naik Laporan"]}
-        userName="Encik Rashdan bin Ismail"
-        userRole="Ketua Bahagian"
+        userName="En. Faizal Yusof"
+        userRole="Ketua Bahagian-Fizikal"
       />
 
       <div className="content">

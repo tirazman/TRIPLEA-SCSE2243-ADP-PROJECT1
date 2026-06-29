@@ -412,7 +412,7 @@ export default function KBPengagihanTugasan() {
       <Navbar
         title="Pengagihan Tugasan"
         breadcrumbItems={["e-Urus PDK", "Ketua Bahagian", "Pengagihan Tugasan"]}
-        userName="Hafizul Hakim"
+        userName="En. Faizal Yusof"
         userRole="Ketua Bahagian-Fizikal"
       />
 

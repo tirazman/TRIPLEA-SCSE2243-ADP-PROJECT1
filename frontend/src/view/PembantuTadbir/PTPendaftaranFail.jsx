@@ -60,8 +60,7 @@ export default function PTPendaftaranFail() {
   );
   
   // Form States
-  const [formData, setFormData] = useState({ title: "", notes: "" });
-  const [file, setFile] = useState(null);
+  const [formData, setFormData] = useState({ title: "", notes: "", dueDate: "" });  const [file, setFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -165,6 +164,7 @@ export default function PTPendaftaranFail() {
         const newRecord = {
           ref: siriRujukan,
           title: formData.title.trim(),
+          dueDate: formData.dueDate,
           date: today,
           status: "Dalam Tindakan"
         };
@@ -176,9 +176,12 @@ export default function PTPendaftaranFail() {
     }, 2000);
   };
 
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minDate = tomorrow.toISOString().split("T")[0];
+
   return (
     <>
-      {/* 📌 2. Kemas kini tajuk Navbar dan breadcrumbItems, serta buang statusText */}
       <Navbar 
         title="Pendaftaran Fail"
         breadcrumbItems={["e-Urus PDK", "Subsistem 1", "Pendaftaran Fail"]}
@@ -222,6 +225,7 @@ export default function PTPendaftaranFail() {
                     <th>No. Rujukan</th>
                     <th>Maklumat Dokumen</th>
                     <th>Tarikh Muat Naik</th>
+                    <th>Tempoh Akhir</th>
                     <th>Status</th>
                     <th>Tindakan</th>
                   </tr>
@@ -234,6 +238,7 @@ export default function PTPendaftaranFail() {
                         <div className="td-tajuk">{item.title}</div>
                       </td>
                       <td className="td-date">{item.date}</td>
+                      <td className="td-date">{item.dueDate}</td>
                       <td>
                         <span className={`status-badge ${item.status === 'Dalam Tindakan' ? 'badge-warning' : 'badge-success'}`}>
                           <div className="badge-dot"></div>
@@ -293,6 +298,19 @@ export default function PTPendaftaranFail() {
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         disabled={isSubmitting}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="dueDate">Tempoh Akhir (Due Date) <span className="required">*</span></label>
+                      <input 
+                        type="date" 
+                        id="dueDate" 
+                        className="form-control" 
+                        value={formData.dueDate}
+                        onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                        disabled={isSubmitting}
+                        min={minDate} 
+                        required
                       />
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>

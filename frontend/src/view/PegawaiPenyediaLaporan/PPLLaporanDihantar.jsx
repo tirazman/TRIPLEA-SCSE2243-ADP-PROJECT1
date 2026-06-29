@@ -147,7 +147,16 @@ export default function PPLLaporanDihantar() {
             </div>
           </div>
 
-          <table className="data-table">
+          {/* 📌 Ditambah style tableLayout auto dan colgroup bagi menetapkan ukuran lebar yang kemas */}
+          <table className="data-table" style={{ tableLayout: "auto" }}>
+            <colgroup>
+              <col style={{ width: "140px" }} />
+              <col />
+              <col style={{ width: "130px" }} />
+              <col style={{ width: "150px" }} />
+              <col style={{ width: "180px" }} />
+              <col style={{ width: "110px" }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>No. Laporan</th>
@@ -155,7 +164,8 @@ export default function PPLLaporanDihantar() {
                 <th>Tarikh Hantar</th>
                 <th>Status</th>
                 <th>Ketua Bahagian</th>
-                <th style={{ textAlign: "right" }}>Tindakan</th>
+                {/* 📌 Diperbaiki tulisan header 'Tindakan' alignment-nya */}
+                <th style={{ textAlign: "right", paddingRight: "24px" }}>Tindakan</th>
               </tr>
             </thead>
             <tbody>
@@ -169,14 +179,17 @@ export default function PPLLaporanDihantar() {
                   <td className="td-date">{r.dateSubmitted}</td>
                   <td><ReportStatusBadge status={r.status} /></td>
                   <td className="td-date">{r.kbName}</td>
-                  <td style={{ textAlign: "right" }}>
-                    <button className="btn-secondary" onClick={() => setViewingReport(r)}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <circle cx="11" cy="11" r="8" />
-                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                      </svg>
-                      Lihat
-                    </button>
+                  {/* 📌 Penjajaran butang 'Lihat' dilaraskan supaya selari di bawah teks tindakan */}
+                  <td style={{ paddingRight: "24px" }}>
+                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                      <button className="btn-secondary" onClick={() => setViewingReport(r)}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <circle cx="11" cy="11" r="8" />
+                          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        Lihat
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
