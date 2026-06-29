@@ -279,6 +279,8 @@ export const pplLaporanData = [
 
 
 // DATA ONLY FOR KB
+
+/* ─── Tab: "Pengagihan" (Ketua Bahagian — agihan tugasan ke PPL) ─── */
 export const kbPengagihanStatusData = [
   {
     ref: "PDK/KLG/2026/0912",
@@ -322,3 +324,70 @@ export const kbPengagihanStatusData = [
   },
 ];
 
+/* ─── KB's own tugasan list (no dependency on tugasanData.jsx) ─── */
+// Status values used here:
+//   "Belum Diagihkan" — belum ada pegawai ditugaskan
+//   "Sudah Diagihkan" — pegawai telah ditugaskan, dalam tempoh
+//   "Lewat"           — pegawai telah ditugaskan, tapi melepasi tarikh akhir
+//   "Selesai"         — tugasan telah selesai (dipaparkan sebagai "Sudah Diagihkan")
+export const kbTugasanList = [
+  {
+    id: "TGS-2026-0147",
+    caseRef: "PDK/KLG/2026/0847",
+    caseTitle: "Banjir Kilat — Jalan Dato' Abdul Rahman",
+    officer: "En. Shahril Bin Hamid",
+    instruction:
+      "Pegawai diarahkan untuk turun padang ke lokasi Jambatan Kg. Sungai Kecil bagi menjalankan pemeriksaan fizikal dan menyediakan laporan teknikal yang lengkap. Laporan hendaklah mengandungi penilaian kerosakan struktur, butiran koordinat lokasi, status infrastruktur awam dan asas di tapak, anggaran kos pembaikan, serta gambar bukti yang jelas dan berformat.",
+    priority: "Tinggi",
+    dateGiven: "07 Jun 2026",
+    deadline: "13 Jun 2026",
+    status: "Sudah Diagihkan",
+  },
+  {
+    id: "TGS-2026-0148",
+    caseRef: "PDK/KLG/2026/0831",
+    caseTitle: "Kerosakan Lampu Isyarat Simpang Renggam",
+    officer: "Pn. Norlia Binti Daud",
+    instruction:
+      "Sila sahkan status aduan bersama pihak JKR Daerah Kluang dan dapatkan pengesahan bertulis berkenaan tarikh anggaran pembaikan. Sertakan gambar terkini keadaan lampu isyarat dan maklum balas pengguna jalan sekitar kawasan tersebut.",
+    priority: "Sederhana",
+    dateGiven: "08 Jun 2026",
+    deadline: "14 Jun 2026",
+    status: "Sudah Diagihkan",
+  },
+  {
+    id: "TGS-2026-0149",
+    caseRef: "PDK/KLG/2026/0819",
+    caseTitle: "Aduan Jalan Berlubang Kampung Melayu",
+    officer: "En. Zulhilmi Bin Rahmat",
+    instruction:
+      "Jalankan tinjauan tapak bagi menilai tahap keparahan lubang jalan dan kesan kepada pengguna jalan raya. Laporan perlu disertakan dengan ukuran lubang, gambar bertarikh dan cadangan kaedah pembaikan segera.",
+    priority: "Tinggi",
+    dateGiven: "02 Jun 2026",
+    deadline: "06 Jun 2026",
+    status: "Lewat",
+  },
+  {
+    id: "TGS-2026-0146",
+    caseRef: "PDK/KLG/2026/0819",
+    caseTitle: "Aduan Jalan Berlubang Kampung Melayu",
+    officer: "En. Rashdan Bin Ismail",
+    instruction:
+      "Dapatkan maklum balas daripada Ketua Kampung Melayu berkenaan tahap kekerapan aduan penduduk dan kesan kepada keselamatan jalan raya di kawasan tersebut.",
+    priority: "Rendah",
+    dateGiven: "26 Mei 2026",
+    deadline: "31 Mei 2026",
+    status: "Selesai",
+  },
+  {
+    id: "TGS-2026-0150",
+    caseRef: "PDK/KLG/2026/0847",
+    caseTitle: "Banjir Kilat — Jalan Dato' Abdul Rahman",
+    officer: "",
+    instruction: "",
+    priority: "Tinggi",
+    dateGiven: "29 Jun 2026",
+    deadline: "05 Jul 2026",
+    status: "Belum Diagihkan",
+  },
+];

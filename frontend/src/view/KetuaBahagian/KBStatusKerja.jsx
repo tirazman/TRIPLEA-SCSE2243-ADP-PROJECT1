@@ -1,29 +1,12 @@
 import { useState } from "react";
 import Navbar from "../../components/common/navbar";
-import { pplLaporanData } from "../../data/statusKerjaData";
-import { initialTugasanList } from "../../data/tugasanData";
+import { pplLaporanData, kbTugasanList } from "../../data/statusKerjaData";
 import "../../styles/pages/StatusKerja.css";
-
-/* ─── Data khusus KB — extend initialTugasanList dengan 1 entry belum diagihkan ─── */
-const kbTugasanList = [
-  ...initialTugasanList,
-  {
-    id: "TGS-2026-0150",
-    caseRef: "PDK/KLG/2026/0847",
-    caseTitle: "Banjir Kilat — Jalan Dato' Abdul Rahman",
-    officer: "",
-    instruction: "",
-    priority: "Tinggi",
-    dateGiven: "29 Jun 2026",
-    deadline: "05 Jul 2026",
-    status: "Belum Diagihkan",
-  },
-];
 
 /* ─── Badge status tugasan KB ─── */
 function TugasanStatusBadge({ status }) {
   const map = {
-    "Menunggu Laporan": { cls: "badge-progress", label: "Sudah Diagihkan" },
+    "Sudah Diagihkan":  { cls: "badge-progress", label: "Sudah Diagihkan" },
     "Selesai":          { cls: "badge-received", label: "Sudah Diagihkan" },
     "Lewat":            { cls: "badge-overdue",  label: "Sudah Diagihkan (Lewat)" },
     "Belum Diagihkan":  { cls: "badge-pending",  label: "Belum Diagihkan" },
@@ -272,7 +255,7 @@ export default function KBStatusKerja() {
   const pplCompleted = pplLaporanData.filter(r => r.status === "Completed").length;
   const pplOverdue   = pplLaporanData.filter(r => r.status === "Overdue").length;
 
-  // ── Fixed filter — guard against empty officer field ──
+  // ── Guard against empty officer field ──
   const filteredTugasan = kbTugasanList.filter(t => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
@@ -421,7 +404,6 @@ export default function KBStatusKerja() {
                 <tbody>
                   {filteredTugasan.map(t => (
                     <tr key={t.id}>
-                      {/* ── Fixed: inline style to force visibility ── */}
                       <td style={{
                         fontFamily: "'IBM Plex Mono', monospace",
                         fontSize: '11.5px', fontWeight: 600,
