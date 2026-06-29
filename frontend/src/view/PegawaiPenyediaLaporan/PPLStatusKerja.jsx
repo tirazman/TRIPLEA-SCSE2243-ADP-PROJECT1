@@ -233,7 +233,7 @@ export default function PPLStatusKerja() {
             <thead>
                 <tr>
                     <th>No. Rujukan</th>
-                    <th>Kes</th>
+                    <th>Aduan</th>
                     <th>Nama Laporan</th>
                     <th>Tarikh Terima</th>
                     <th>Tempoh Akhir</th>

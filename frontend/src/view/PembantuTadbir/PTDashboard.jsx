@@ -7,8 +7,8 @@ import DashboardLayout from "../../components/common/DashboardLayout";
  */
 const menuItems = [
   {
-    label: "Penerimaan Laporan",
-    path: "/pembantu-tadbir/penerimaan",
+    label: "Pendaftaran Fail", 
+    path: "/pembantu-tadbir/pendaftaran", 
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
