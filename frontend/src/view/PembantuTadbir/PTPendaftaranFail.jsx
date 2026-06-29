@@ -301,7 +301,7 @@ export default function PTPendaftaranFail() {
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor="dueDate">Tempoh Akhir (Due Date) <span className="required">*</span></label>
+                      <label htmlFor="dueDate">Tempoh Akhir <span className="required">*</span></label>
                       <input 
                         type="date" 
                         id="dueDate" 
