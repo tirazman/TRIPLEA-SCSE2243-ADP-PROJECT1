@@ -1,6 +1,8 @@
-// Dummy seed data for the case list & department sub-reports.
-// Replace with real API data later — shape kept identical so swapping
-// in a fetch() call only requires changing where this array comes from.
+
+// caseData.jsx
+// submittedCount = berapa bahagian dah submit
+// totalDepts     = berapa bahagian diperlukan (3 = Fizikal + Masyarakat + Pentadbiran)
+// Konsolidasi AI hanya boleh dimulakan bila submittedCount === totalDepts
 
 export const caseList = [
   {
@@ -10,7 +12,9 @@ export const caseList = [
     tarikhTerima: "04 Jun 2026",
     tempohAkhir: "07 Jun 2026",
     overdue: false,
-    status: "pending", // "pending" | "overdue"
+    keutamaan: "Tinggi",
+    submittedCount: 3,
+    totalDepts: 3,
   },
   {
     ref: "PDK/KLG/2026/0831",
@@ -19,7 +23,9 @@ export const caseList = [
     tarikhTerima: "01 Jun 2026",
     tempohAkhir: "04 Jun 2026",
     overdue: true,
-    status: "overdue",
+    keutamaan: "Sederhana",
+    submittedCount: 2,
+    totalDepts: 3,
   },
   {
     ref: "PDK/KLG/2026/0819",
@@ -28,18 +34,19 @@ export const caseList = [
     tarikhTerima: "28 Mei 2026",
     tempohAkhir: "08 Jun 2026",
     overdue: false,
-    status: "pending",
+    keutamaan: "Rendah",
+    submittedCount: 1,
+    totalDepts: 3,
   },
 ];
 
-// Department sub-reports shown inside the case detail / consolidation workspace.
-// In the original vanilla version these were static for every case; kept the same here.
 export const departmentReports = [
   {
     id: "fizikal",
     deptClass: "dept-fizikal",
     name: "Bahagian Fizikal",
     subtitle: "Infrastruktur, Kos & Tapak",
+    submitted: true,
     icon: (
       <>
         <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -65,6 +72,7 @@ export const departmentReports = [
     deptClass: "dept-masyarakat",
     name: "Bahagian Masyarakat",
     subtitle: "Aduan Awam & Impak Komuniti",
+    submitted: true,
     icon: (
       <>
         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
@@ -86,6 +94,7 @@ export const departmentReports = [
     deptClass: "dept-pentadbiran",
     name: "Bahagian Pentadbiran",
     subtitle: "Bencana & Keselamatan",
+    submitted: true,
     icon: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
     infoRows: [
       ["Pegawai Penyedia", "Azri Faisal bin Nordin"],
@@ -96,8 +105,14 @@ export const departmentReports = [
   },
 ];
 
-// AI consolidation pipeline progress steps (label + percentage), used to
-// drive the animated progress bar inside the loading overlay.
+// Per-case department submission tracking
+// submittedDepts lists which dept IDs have submitted for that case
+export const caseDeptSubmissions = {
+  "PDK/KLG/2026/0847": ["fizikal", "masyarakat", "pentadbiran"], // semua 3 submit
+  "PDK/KLG/2026/0831": ["fizikal", "masyarakat"],                // 2/3 submit
+  "PDK/KLG/2026/0819": ["fizikal"],                              // 1/3 submit
+};
+
 export const STRATEGI_MAPPING = [
   { pct: 15, msg: "Membaca laporan Bahagian Fizikal..." },
   { pct: 35, msg: "Menganalisis data empirikal Bahagian Masyarakat..." },
@@ -106,4 +121,5 @@ export const STRATEGI_MAPPING = [
   { pct: 95, msg: "Menyelaraskan struktur format dokumen rasmi..." },
   { pct: 100, msg: "Konsolidasi selesai. Menjana draf Word..." },
 ];
+
 

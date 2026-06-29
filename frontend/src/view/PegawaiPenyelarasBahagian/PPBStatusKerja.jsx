@@ -9,7 +9,6 @@ import {
 } from "../../data/statusKerjaData";
 import "../../styles/pages/StatusKerja.css";
 
-/* ─── Badge status untuk setiap kes (table) ─── */
 function CaseStatusBadge({ status }) {
   const map = {
     Pending: { cls: "badge-pending", label: "Menunggu Tindakan" },
@@ -25,7 +24,6 @@ function CaseStatusBadge({ status }) {
   );
 }
 
-/* ─── Badge status untuk setiap jabatan (dalam modal) ─── */
 function DeptStatusBadge({ status }) {
   const map = {
     Pending: { cls: "badge-pending", label: deptStatusLabel.Pending },
@@ -37,12 +35,8 @@ function DeptStatusBadge({ status }) {
   return <span className={`status-badge ${conf.cls}`}>{conf.label}</span>;
 }
 
-/* ─── Satu entri timeline jabatan dalam modal ─── */
 function DeptTimelineItem({ entry }) {
   const dept = deptDisplay[entry.dept] || { short: "?" };
-
-  // Warna avatar jabatan — ikut bahagian, sama macam vanilla (tambahan,
-  // sebab tema sedia ada tak ada set warna khusus untuk setiap jabatan).
   const deptColorMap = {
     "Bahagian Fizikal": { color: "#1a6fa8", bg: "#e8f4fd", border: "#90c8f0" },
     "Bahagian Masyarakat": { color: "#6b3fa0", bg: "#f3eefe", border: "#c4a8e8" },
@@ -52,10 +46,7 @@ function DeptTimelineItem({ entry }) {
 
   return (
     <div className="dept-timeline-item">
-      <div
-        className="dept-avatar"
-        style={{ background: colors.bg, border: `1px solid ${colors.border}`, color: colors.color }}
-      >
+      <div className="dept-avatar" style={{ background: colors.bg, border: `1px solid ${colors.border}`, color: colors.color }}>
         {dept.short}
       </div>
       <div className="dept-timeline-content">
@@ -63,7 +54,6 @@ function DeptTimelineItem({ entry }) {
           <span className="dept-timeline-name" style={{ color: colors.color }}>{entry.dept}</span>
           <DeptStatusBadge status={entry.status} />
         </div>
-
         <div className="dept-doc-chip">
           <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -71,9 +61,7 @@ function DeptTimelineItem({ entry }) {
           </svg>
           <span>{entry.docTitle}</span>
         </div>
-
         <p className="dept-timeline-note">{entry.note}</p>
-
         <div className="dept-timeline-meta">
           <span className="dept-timeline-meta-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -95,10 +83,8 @@ function DeptTimelineItem({ entry }) {
   );
 }
 
-/* ─── Modal: Sejarah Pergerakan Kes ─── */
 function CaseHistoryModal({ caseRef, onClose }) {
   if (!caseRef) return null;
-
   const kes = caseRegistry[caseRef];
   const deptStatuses = caseDeptStatus[caseRef] || [];
   const relatedCases = workStatusCases.filter((c) => c.ref === caseRef);
@@ -125,7 +111,6 @@ function CaseHistoryModal({ caseRef, onClose }) {
             </svg>
           </button>
         </div>
-
         <div className="case-modal-body">
           <div>
             <div className="case-modal-section-label">Dokumen Dalam Kes Ini</div>
@@ -136,9 +121,7 @@ function CaseHistoryModal({ caseRef, onClose }) {
               </div>
             ))}
           </div>
-
           <div className="case-modal-divider"></div>
-
           <div>
             <div className="case-modal-section-label">Status Tindakan Mengikut Bahagian</div>
             {deptStatuses.map((entry) => (
@@ -146,7 +129,6 @@ function CaseHistoryModal({ caseRef, onClose }) {
             ))}
           </div>
         </div>
-
         <div className="case-modal-footer">
           <button className="btn-secondary" onClick={onClose}>Tutup</button>
         </div>
@@ -155,24 +137,18 @@ function CaseHistoryModal({ caseRef, onClose }) {
   );
 }
 
-/* ════════════════════════════════════════════════════════════════
-   MAIN PAGE — Status Kerja
-   Cases still waiting on one or more departments to submit. Once
-   every department for a case has submitted, that case is moved to
-   "Penerimaan Laporan" instead (so it disappears from this page).
-   ════════════════════════════════════════════════════════════════ */
 export default function PPBStatusKerja() {
   const [activeCaseRef, setActiveCaseRef] = useState(null);
 
   const inProgressCount = workStatusCases.filter((c) => c.status === "In Progress").length;
-  const overdueCount = workStatusCases.filter((c) => c.status === "Overdue").length;
-  const pendingCount = workStatusCases.filter((c) => c.status === "Pending").length;
+  const overdueCount    = workStatusCases.filter((c) => c.status === "Overdue").length;
+  const pendingCount    = workStatusCases.filter((c) => c.status === "Pending").length;
 
   return (
     <>
       <Navbar
         title="Status Kerja"
-        breadcrumbItems={["e-Urus PDK", "Subsistem 4", "Senarai Kes Aktif"]}
+        breadcrumbItems={["e-Urus PDK", "Subsistem 4", "Status Kes"]}
       />
 
       <div className="content">
@@ -197,7 +173,6 @@ export default function PPBStatusKerja() {
               <div className="summary-label">Dalam Proses</div>
             </div>
           </div>
-
           <div className="summary-card">
             <div className="summary-icon" style={{ borderColor: "var(--red-border)", background: "var(--red-bg)" }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
@@ -210,7 +185,6 @@ export default function PPBStatusKerja() {
               <div className="summary-label">Melebihi Tempoh</div>
             </div>
           </div>
-
           <div className="summary-card">
             <div className="summary-icon" style={{ borderColor: "var(--amber-border)", background: "var(--amber-bg)" }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="2">
@@ -229,7 +203,8 @@ export default function PPBStatusKerja() {
         <div className="table-panel">
           <div className="table-panel-header">
             <div>
-              <div className="table-panel-title">Senarai Kes Aktif</div>
+              {/* ← PERUBAHAN: "Senarai Kes Aktif" → "Status Kes" */}
+              <div className="table-panel-title">Status Kes</div>
               <div className="table-panel-sub">Menunjukkan {workStatusCases.length} kes yang sedang dalam proses koordinasi bahagian</div>
             </div>
             <div className="search-input-wrap search-input-sk-wrap">
@@ -264,11 +239,7 @@ export default function PPBStatusKerja() {
                   <td className={`td-tempoh ${c.status === "Overdue" ? "tempoh-overdue" : "tempoh-normal"}`}>
                     {c.deadline}
                     {c.status === "Overdue" && (
-                      <svg
-                        className="deadline-warning-icon"
-                        width="11" height="11" viewBox="0 0 24 24" fill="none"
-                        stroke="var(--red)" strokeWidth="2.5"
-                      >
+                      <svg className="deadline-warning-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2.5">
                         <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                         <line x1="12" y1="9" x2="12" y2="13" />
                         <line x1="12" y1="17" x2="12.01" y2="17" />
