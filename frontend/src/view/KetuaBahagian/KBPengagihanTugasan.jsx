@@ -9,8 +9,6 @@ import {
 import "../../styles/pages/PengagihanTugasan.css";
 
 /* ─── Badge status tugasan ─── */
-// Hanya dua status: "Sedang Diproses" dan "Selesai".
-// Hanya "Sedang Diproses" boleh dikemaskini.
 function TugasanStatusBadge({ status }) {
   const isSelesai = status === "Selesai";
   return (
@@ -147,8 +145,7 @@ function NewTugasanModal({ onClose, onCreate }) {
   );
 }
 
-/* ─── Modal: Lihat & Urus Tugasan ─── */
-// Edit hanya dibenarkan untuk tugasan berstatus "Sedang Diproses".
+/* ─── Modal: Lihat & Urus Tugasan (Kotak Tarikh Akhir Dibuang) ─── */
 function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState(null);
@@ -156,6 +153,7 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
   if (!tugasan) return null;
 
   const isSedangDiproses = tugasan.status === "Sedang Diproses";
+  const isSelesai = tugasan.status === "Selesai";
 
   const handleEditOpen = () => {
     setEditForm({
@@ -187,7 +185,7 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
 
   return (
     <div className="kb-modal-overlay show" onClick={onClose}>
-      <div className="kb-modal-box" onClick={(e) => e.stopPropagation()}>
+      <div className="kb-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
         <div className="kb-modal-header">
           <div>
             <div className="kb-modal-title">{tugasan.caseRef}</div>
@@ -203,7 +201,7 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
           </button>
         </div>
 
-        <div className="kb-modal-body">
+        <div className="kb-modal-body" style={{ overflowY: "auto", flex: 1, paddingRight: "8px" }}>
           {!editMode ? (
             <>
               <div className="case-ref-card">
@@ -212,7 +210,7 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
                 <div className="case-ref-no">{tugasan.caseRef}</div>
               </div>
 
-              <div className="instruction-card">
+              <div className="instruction-card" style={{ marginBottom: isSelesai ? "0px" : "15px" }}>
                 <div className="instruction-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13" />
@@ -239,30 +237,67 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
                       </svg>
                       Tarikh Arahan: <strong>{tugasan.dateGiven}</strong>
                     </span>
-                    <span className="instruction-meta-item">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                      </svg>
-                      No. Rujukan: <strong>{tugasan.caseRef}</strong>
-                    </span>
                   </div>
                 </div>
               </div>
 
-              <div className="deadline-banner">
-                <div className="deadline-banner-left">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                  <div>
-                    <div className="deadline-banner-label">Tarikh Akhir Penghantaran</div>
-                    <div className="deadline-banner-date">{tugasan.deadline}</div>
+              {/* ─── 📌 SEKSYEN LAPORAN YANG DIHANTAR SEMULA OLEH PPL ─── */}
+              {isSelesai && (
+                <div style={{
+                  marginTop: "18px", padding: "16px", background: "#f0fdf4", 
+                  border: "1px solid #bbf7d0", borderRadius: "var(--radius-md, 6px)"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                    <span style={{
+                      fontSize: "10px", fontWeight: "bold", background: "#16a34a", 
+                      color: "white", padding: "2px 6px", borderRadius: "4px"
+                    }}>TERIMA</span>
+                    <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#14532d" }}>
+                      Hasil Laporan &amp; Bukti Lapangan (PPL)
+                    </div>
+                  </div>
+                  
+                  <p style={{ fontSize: "12px", color: "#166534", lineHeight: "1.5", margin: "0 0 12px 0" }}>
+                    Pegawai Penyedia Laporan (<strong>{tugasan.officer}</strong>) telah melengkapkan tugasan siasatan dan memuat naik dokumen maklum balas akhir.
+                  </p>
+
+                  {/* Kad Muat Turun Fail */}
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    background: "white", padding: "10px 14px", borderRadius: "6px",
+                    border: "1px solid #dcfce7"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" style={{ width: "18px", height: "18px" }}>
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                      <div>
+                        <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-dark)" }}>
+                          {tugasan.caseRef}_Laporan_Siasatan_PPL.pdf
+                        </div>
+                        <div style={{ fontSize: "10.5px", color: "var(--text-soft)" }}>Dokumen PDF &bull; Selesai Dihantar</div>
+                      </div>
+                    </div>
+                    
+                    <button 
+                      onClick={() => alert("Memulakan muat turun fail laporan...")}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "11.5px",
+                        fontWeight: "600", color: "#16a34a", background: "#f0fdf4", border: "1px solid #bbf7d0",
+                        padding: "5px 10px", borderRadius: "4px", cursor: "pointer"
+                      }}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ width: "13px", height: "13px" }}>
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Muat Turun
+                    </button>
                   </div>
                 </div>
-                <PriorityPill priority={tugasan.priority} />
-              </div>
+              )}
             </>
           ) : (
             <>
@@ -300,7 +335,7 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
           )}
         </div>
 
-        <div className="kb-modal-footer">
+        <div className="kb-modal-footer" style={{ marginTop: "auto" }}>
           {isSedangDiproses && !editMode && (
             <button type="button" className="btn-danger-outline" onClick={handleRemove}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -344,7 +379,6 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
    ════════════════════════════════════════════════════════════════ */
 export default function KBPengagihanTugasan() {
   const [tugasanList, setTugasanList] = useState(
-    // Generate a stable unique key per entry since we removed id field
     initialTugasanList.map((t, i) => ({ ...t, _key: i }))
   );
   const [showNewModal, setShowNewModal] = useState(false);
@@ -378,7 +412,6 @@ export default function KBPengagihanTugasan() {
     setShowNewModal(false);
   };
 
-  // Identify entry by caseRef + officer + dateGiven (unique combo)
   const matchEntry = (t, caseRef, officer, dateGiven) =>
     t.caseRef === caseRef && t.officer === officer && t.dateGiven === dateGiven;
 

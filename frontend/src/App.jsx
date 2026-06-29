@@ -12,7 +12,6 @@ import KJStatusKerja from "./view/KetuaJabatan/KJStatusKerja";
 import KBDashboard from "./view/KetuaBahagian/KBDashboard";
 import KBArahanKetuaJabatan from "./view/KetuaBahagian/KBArahanKetuaJabatan";
 import KBPengagihanTugasan from "./view/KetuaBahagian/KBPengagihanTugasan";
-import KBLaporanDihantar from "./view/KetuaBahagian/KBLaporanDihantar";
 import KBStatusKerja from "./view/KetuaBahagian/KBStatusKerja";
 import KBHantarLaporan from "./view/KetuaBahagian/KBHantarLaporan";
 
@@ -20,11 +19,9 @@ import PPLDashboard from "./view/PegawaiPenyediaLaporan/PPLDashboard";
 import PPLStatusKerja from "./view/PegawaiPenyediaLaporan/PPLStatusKerja";
 import PPLArahanKetuaBahagian from "./view/PegawaiPenyediaLaporan/PPLArahanKetuaBahagian";
 import PPLHantarLaporan from "./view/PegawaiPenyediaLaporan/PPLHantarLaporan";
-import PPLLaporanDihantar from "./view/PegawaiPenyediaLaporan/PPLLaporanDihantar";
 
 import PPBDashboard from "./view/PegawaiPenyelarasBahagian/PPBDashboard";
 import PPBPenerimaanLaporan from "./view/PegawaiPenyelarasBahagian/PPBPenerimaanLaporan";
-import PPBLaporanDihantar from "./view/PegawaiPenyelarasBahagian/PPBLaporanDihantar";
 import PPBStatusKerja from "./view/PegawaiPenyelarasBahagian/PPBStatusKerja";
 
 function App() {
@@ -51,7 +48,6 @@ function App() {
           <Route index element={<Navigate to="arahan-ketua-jabatan" replace />} />
           <Route path="arahan-ketua-jabatan" element={<KBArahanKetuaJabatan />} />
           <Route path="pengagihan-tugasan" element={<KBPengagihanTugasan />} />
-          <Route path="laporan-dihantar" element={<KBLaporanDihantar />} />
           <Route path="status-kerja" element={<KBStatusKerja />} />
           <Route path="arahan-ketua-jabatan/:caseId/hantar-laporan" element={<KBHantarLaporan />} />
         </Route>
@@ -61,7 +57,6 @@ function App() {
           <Route index element={<Navigate to="arahan" replace />} />
           <Route path="arahan" element={<PPLArahanKetuaBahagian />} />
           <Route path="arahan/:taskId/muat-naik" element={<PPLHantarLaporan />} />
-          <Route path="laporan-dihantar" element={<PPLLaporanDihantar />} />
           <Route path="status-kerja" element={<PPLStatusKerja />} />
         </Route>
 
@@ -69,7 +64,6 @@ function App() {
         <Route path="/pegawai-penyelaras" element={<PPBDashboard />}>
           <Route index element={<Navigate to="penerimaan" replace />} />
           <Route path="penerimaan" element={<PPBPenerimaanLaporan />} />
-          <Route path="laporan" element={<PPBLaporanDihantar />} />
           <Route path="status" element={<PPBStatusKerja />} />
         </Route>
       </Routes>
