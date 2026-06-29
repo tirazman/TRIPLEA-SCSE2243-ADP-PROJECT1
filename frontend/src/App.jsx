@@ -17,6 +17,9 @@ import KBStatusKerja from "./view/KetuaBahagian/KBStatusKerja";
 
 import PPLDashboard from "./view/PegawaiPenyediaLaporan/PPLDashboard";
 import PPLStatusKerja from "./view/PegawaiPenyediaLaporan/PPLStatusKerja";
+import PPLArahanKetuaBahagian from "./view/PegawaiPenyediaLaporan/PPLArahanKetuaBahagian";
+import PPLHantarLaporan from "./view/PegawaiPenyediaLaporan/PPLHantarLaporan";
+import PPLLaporanDihantar from "./view/PegawaiPenyediaLaporan/PPLLaporanDihantar";
 
 import PPBDashboard from "./view/PegawaiPenyelarasBahagian/PPBDashboard";
 import PPBPenerimaanLaporan from "./view/PegawaiPenyelarasBahagian/PPBPenerimaanLaporan";
@@ -50,7 +53,10 @@ function App() {
 
         {/* Pegawai Penyedia Laporan */}
         <Route path="/pegawai-penyedia" element={<PPLDashboard />}>
-          <Route index element={<Navigate to="status-kerja" replace />} />
+          <Route index element={<Navigate to="arahan" replace />} />
+          <Route path="arahan" element={<PPLArahanKetuaBahagian />} />
+          <Route path="arahan/:taskId/muat-naik" element={<PPLHantarLaporan />} />
+          <Route path="laporan-dihantar" element={<PPLLaporanDihantar />} />
           <Route path="status-kerja" element={<PPLStatusKerja />} />
         </Route>
 

@@ -1,0 +1,172 @@
+/* Reuses .kembali-link, .panel, .summary-strip, .summary-card, .status-badge
+   etc. from shared.css (global). Only new things below. */
+
+/* ─── STEPPER HEADER ─── */
+.stepper-track {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 24px;
+  margin-bottom: 18px;
+}
+.stepper-step { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.stepper-circle {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
+  border: 1.5px solid var(--border); background: var(--white); color: var(--text-soft);
+  flex-shrink: 0;
+}
+.stepper-circle.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+.stepper-circle.done { background: var(--green); border-color: var(--green); color: var(--white); }
+.stepper-circle.done svg { width: 13px; height: 13px; stroke: white; stroke-width: 2.5; }
+.stepper-label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+.stepper-label.active { color: var(--navy); }
+.stepper-label.done { color: var(--green); }
+.stepper-line { flex: 1; height: 1px; background: var(--border); margin: 0 16px; }
+.stepper-line.done { background: var(--green); }
+
+/* ─── MAKLUMAT KES DITUGASKAN ─── */
+.case-ref-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--navy);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.case-ref-label {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase;
+  color: var(--text-soft); margin-bottom: 4px;
+}
+.case-ref-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+.case-ref-no { font-size: 11px; color: var(--text-soft); font-family: 'IBM Plex Mono', monospace; }
+
+/* ─── ARAHAN RASMI (instruction card) ─── */
+.instruction-card {
+  background: var(--navy);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.instruction-icon {
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.instruction-icon svg { width: 16px; height: 16px; stroke: var(--gold-light); stroke-width: 1.8; }
+.instruction-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+  color: var(--gold-light); margin-bottom: 8px;
+}
+.instruction-text { font-size: 13px; color: rgba(255,255,255,0.92); line-height: 1.65; margin-bottom: 12px; }
+.instruction-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 11px; color: rgba(255,255,255,0.5); }
+.instruction-meta-item { display: inline-flex; align-items: center; gap: 5px; }
+.instruction-meta-item svg { width: 12px; height: 12px; stroke-width: 2; }
+.instruction-meta strong { color: rgba(255,255,255,0.85); font-weight: 600; }
+
+/* ─── TARIKH AKHIR PENGHANTARAN ─── */
+.deadline-banner {
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.deadline-banner-left { display: flex; align-items: center; gap: 12px; }
+.deadline-banner-left svg { width: 20px; height: 20px; stroke: var(--amber); stroke-width: 1.8; flex-shrink: 0; }
+.deadline-banner-label { font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--amber); }
+.deadline-banner-date { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-top: 1px; }
+.deadline-days-pill {
+  background: var(--white); border: 1px solid var(--amber-border); color: var(--amber);
+  font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: var(--radius-sm);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.detail-actions-row { display: flex; justify-content: flex-end; gap: 8px; }
+.btn-primary-action {
+  padding: 9px 18px;
+  background: var(--navy);
+  color: var(--white);
+  border: 1px solid var(--navy-border);
+  border-radius: var(--radius-md);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12.5px; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  transition: background 0.13s;
+}
+.btn-primary-action:hover { background: var(--navy-hover); }
+.btn-primary-action svg { width: 13px; height: 13px; stroke: var(--white); stroke-width: 2.2; }
+
+/* ─── UPLOAD AREA (Hantar Laporan page) ─── */
+.upload-zone-lg {
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface-2);
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+  margin-bottom: 18px;
+}
+.upload-zone-lg:hover, .upload-zone-lg.drag-over { border-color: var(--navy-mid); background: #f0f4fa; }
+.upload-zone-lg input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon-lg {
+  width: 44px; height: 44px; margin: 0 auto 10px;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+}
+.upload-icon-lg svg { width: 22px; height: 22px; stroke: var(--text-muted); stroke-width: 1.6; }
+.upload-heading-lg { font-size: 13px; font-weight: 600; color: var(--text-mid); margin-bottom: 4px; }
+.upload-sub-lg { font-size: 11.5px; color: var(--text-soft); }
+.upload-types-lg { font-size: 10.5px; color: var(--text-muted); margin-top: 6px; font-family: 'IBM Plex Mono', monospace; }
+
+.uploaded-files-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.uploaded-file-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 11px 14px;
+}
+.uploaded-file-icon {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.uploaded-file-icon.pdf { background: #fef3f2; border: 1px solid #fecdca; }
+.uploaded-file-icon.doc { background: #eff6ff; border: 1px solid #93c5fd; }
+.uploaded-file-icon.img { background: #ecfdf3; border: 1px solid #a6f4c5; }
+.uploaded-file-icon svg { width: 18px; height: 18px; stroke-width: 1.8; }
+.uploaded-file-icon.pdf svg { stroke: var(--red); }
+.uploaded-file-icon.doc svg { stroke: #1d4ed8; }
+.uploaded-file-icon.img svg { stroke: var(--green); }
+
+.uploaded-file-info { flex: 1; min-width: 0; }
+.uploaded-file-name { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+.uploaded-file-meta { font-size: 10.5px; color: var(--text-soft); margin-top: 2px; }
+.uploaded-file-confirmed-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 600; color: var(--green);
+  background: var(--green-bg); border: 1px solid var(--green-border);
+  padding: 2px 8px; border-radius: var(--radius-sm);
+}
+.btn-remove-file-row {
+  background: none; border: none; cursor: pointer; color: var(--text-soft);
+  font-size: 14px; padding: 4px; flex-shrink: 0; border-radius: var(--radius-sm);
+}
+.btn-remove-file-row:hover { color: var(--red); background: var(--red-bg); }
+
+.upload-footer-actions {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding-top: 16px; border-top: 1px solid var(--border-light);
+}
