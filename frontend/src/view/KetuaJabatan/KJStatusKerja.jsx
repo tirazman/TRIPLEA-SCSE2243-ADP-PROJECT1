@@ -421,9 +421,92 @@ function CaseDetailModal({ caseData, onClose, onApprove, isSubmitting }) {
   );
 }
 
+/* ─── Modal Butiran Ketua Bahagian (Read-Only) ─── */
+function ButiranKBModal({ data, onClose }) {
+  if (!data) return null;
+
+  return (
+    <div className="case-modal-overlay show" onClick={onClose}>
+      <div className="case-modal-box" onClick={(e) => e.stopPropagation()}>
+        <div className="case-modal-header">
+          <div>
+            <div className="case-modal-id-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              <span className="case-modal-id">{data.caseRef}</span>
+            </div>
+            <div className="case-modal-title">{data.dept}</div>
+            <span className="case-modal-category">{data.caseTitle}</span>
+          </div>
+          <button type="button" className="case-modal-close-btn" onClick={onClose}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="case-modal-body">
+          <div>
+            <div className="case-modal-section-label">Status Tindakan Bahagian</div>
+            <DeptStatusBadge status={data.status} />
+          </div>
+
+          <div className="case-modal-divider" />
+
+          <div>
+            <div className="case-modal-section-label">Maklumat Kemajuan Bahagian</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {[
+                { label: "Ketua Bahagian / Staf", value: data.staff },
+                { label: "Dokumen Dikendali", value: data.docTitle },
+                { label: "Kemaskini Akhir", value: data.date, mono: true },
+              ].map(({ label, value, mono }) => (
+                <div key={label} style={{ display: "flex", gap: "8px", fontSize: "12.5px" }}>
+                  <span style={{ color: "var(--text-soft)", width: "140px", flexShrink: 0 }}>{label}</span>
+                  <span style={{ color: "var(--text-primary)", fontFamily: mono ? "'IBM Plex Mono', monospace" : "inherit" }}>
+                    {value || <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>Tiada maklumat</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {data.note && (
+            <>
+              <div className="case-modal-divider" />
+              <div>
+                <div className="case-modal-section-label">Nota Maklum Balas Bahagian</div>
+                <div style={{
+                  padding: "10px 14px", background: "var(--surface-2)",
+                  border: "1px solid var(--border-light)", borderLeft: "3px solid var(--navy)",
+                  borderRadius: "var(--radius-md)", fontSize: "12.5px",
+                  color: "var(--text-mid)", lineHeight: 1.6,
+                }}>
+                  {data.note}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="case-modal-footer">
+          <button type="button" className="btn-secondary" onClick={onClose}>Tutup</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function KJStatusKerja() {
   const [cases, setCases] = useState(kjWorkStatusCases);
+  const [activeTab, setActiveTab] = useState("tugasan"); // "tugasan" atau "kb"
   const [activeCaseRef, setActiveCaseRef] = useState(null);
+  const [activeKBRow, setActiveKBRow] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
@@ -447,10 +530,10 @@ export default function KJStatusKerja() {
     }, 600);
   };
 
-  const stats = useMemo(
+  // Tab 1 Stats (Tugasan Saya)
+  const statsTugasan = useMemo(
     () => ({
-      dalamProses: cases.filter((c) => c.pipelineStage === "Dalam Proses Bahagian").length,
-      menungguKoordinasi: cases.filter((c) => c.pipelineStage === "Menunggu Koordinasi").length,
+      dalamProses: cases.filter((c) => c.pipelineStage === "Dalam Proses Bahagian" || c.pipelineStage === "Menunggu Koordinasi").length,
       menungguSemakan: cases.filter((c) => c.pipelineStage === "Menunggu Semakan Akhir").length,
       selesai: cases.filter((c) => c.pipelineStage === "Selesai").length,
       lewat: cases.filter((c) => c.pipelineStage === "Melebihi Tempoh").length,
@@ -458,6 +541,39 @@ export default function KJStatusKerja() {
     [cases]
   );
 
+  // Tab 2 Data & Stats Generation (Status Ketua Bahagian)
+  const kbStatusList = useMemo(() => {
+    const list = [];
+    cases.forEach((c) => {
+      const depts = kjCaseDeptStatus[c.ref] || [];
+      depts.forEach((d, idx) => {
+        list.push({
+          id: `${c.ref}-${idx}`,
+          caseRef: c.ref,
+          caseTitle: c.title,
+          dept: d.dept,
+          status: d.status,
+          staff: d.staff,
+          date: d.date,
+          docTitle: d.docTitle,
+          note: d.note,
+        });
+      });
+    });
+    return list;
+  }, [cases]);
+
+  const statsKB = useMemo(
+    () => ({
+      pending: kbStatusList.filter((k) => k.status === "Pending").length,
+      inProgress: kbStatusList.filter((k) => k.status === "In Progress").length,
+      completed: kbStatusList.filter((k) => k.status === "Completed").length,
+      overdue: kbStatusList.filter((k) => k.status === "Overdue").length,
+    }),
+    [kbStatusList]
+  );
+
+  // Filtering Filters
   const filteredCases = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return cases;
@@ -470,6 +586,24 @@ export default function KJStatusKerja() {
         c.assignedDepts.some((d) => d.toLowerCase().includes(q))
     );
   }, [cases, searchQuery]);
+
+  const filteredKB = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return kbStatusList;
+
+    return kbStatusList.filter(
+      (k) =>
+        k.caseRef.toLowerCase().includes(q) ||
+        k.caseTitle.toLowerCase().includes(q) ||
+        k.dept.toLowerCase().includes(q) ||
+        k.staff.toLowerCase().includes(q)
+    );
+  }, [kbStatusList, searchQuery]);
+
+  const handleTabSwitch = (tab) => {
+    setActiveTab(tab);
+    setSearchQuery("");
+  };
 
   return (
     <>
@@ -485,185 +619,312 @@ export default function KJStatusKerja() {
           <div>
             <h1 className="page-heading">Status Kerja</h1>
             <p className="page-subheading">
-              Pantau kemajuan kes yang telah diagihkan. Klik <strong>Butiran</strong> atau{" "}
-              <strong>Semak</strong> untuk melihat status bahagian; luluskan semakan akhir melalui
-              butang dalam modal selepas menyemak satu laporan konsolidasi daripada PPB.
+              Pantau kemajuan tugasan di bawah tindakan anda sendiri serta status tindakan terkini semua Ketua Bahagian (KB).
             </p>
           </div>
         </div>
 
-        <div className="summary-strip" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
-          <div className="summary-card">
-            <div className="summary-icon summary-icon-blue">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-              </svg>
-            </div>
-            <div>
-              <div className="summary-val">{stats.dalamProses + stats.menungguKoordinasi}</div>
-              <div className="summary-label">Dalam Proses</div>
-            </div>
-          </div>
-
-          <div className="summary-card">
-            <div
-              className="summary-icon"
-              style={{ borderColor: "var(--amber-border)", background: "var(--amber-bg)" }}
+        {/* ─── TABS NAVIGATION ─── */}
+        <div style={{ display: "flex", gap: "4px", marginBottom: "18px", borderBottom: "1px solid var(--border)" }}>
+          {[
+            { key: "tugasan", label: "Tugasan Saya" },
+            { key: "kb", label: "Status Ketua Bahagian" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => handleTabSwitch(key)}
+              style={{
+                padding: "9px 18px", fontSize: "13px", fontWeight: 600,
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                border: "none", background: "none", cursor: "pointer",
+                borderBottom: activeTab === key ? "2px solid var(--navy)" : "2px solid transparent",
+                color: activeTab === key ? "var(--navy)" : "var(--text-soft)",
+                marginBottom: "-1px", transition: "color 0.15s",
+              }}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-            </div>
-            <div>
-              <div className="summary-val">{stats.menungguSemakan}</div>
-              <div className="summary-label">Menunggu Semakan Akhir</div>
-            </div>
-          </div>
-
-          <div className="summary-card">
-            <div
-              className="summary-icon"
-              style={{ borderColor: "var(--green-border)", background: "var(--green-bg)" }}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
-            <div>
-              <div className="summary-val">{stats.selesai}</div>
-              <div className="summary-label">Selesai</div>
-            </div>
-          </div>
-
-          <div className="summary-card">
-            <div
-              className="summary-icon"
-              style={{ borderColor: "var(--red-border)", background: "var(--red-bg)" }}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-            </div>
-            <div>
-              <div className="summary-val">{stats.lewat}</div>
-              <div className="summary-label">Melebihi Tempoh</div>
-            </div>
-          </div>
+              {label}
+            </button>
+          ))}
         </div>
 
-        <div className="table-panel">
-          <div className="table-panel-header">
-            <div>
-              <div className="table-panel-title">Status Kes Diagihkan</div>
-              <div className="table-panel-sub">
-                Menunjukkan {filteredCases.length} kes yang telah diagihkan oleh Ketua Jabatan
+        {/* ─── TAB 1: TUGASAN SAYA ─── */}
+        {activeTab === "tugasan" && (
+          <>
+            <div className="summary-strip" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+              <div className="summary-card">
+                <div className="summary-icon summary-icon-blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="summary-val">{statsTugasan.dalamProses}</div>
+                  <div className="summary-label">Dalam Proses</div>
+                </div>
+              </div>
+
+              <div className="summary-card">
+                <div className="summary-icon" style={{ borderColor: "var(--amber-border)", background: "var(--amber-bg)" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="summary-val">{statsTugasan.menungguSemakan}</div>
+                  <div className="summary-label">Menunggu Semakan Akhir</div>
+                </div>
+              </div>
+
+              <div className="summary-card">
+                <div className="summary-icon" style={{ borderColor: "var(--green-border)", background: "var(--green-bg)" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="summary-val">{statsTugasan.selesai}</div>
+                  <div className="summary-label">Selesai</div>
+                </div>
+              </div>
+
+              <div className="summary-card">
+                <div className="summary-icon" style={{ borderColor: "var(--red-border)", background: "var(--red-bg)" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="summary-val">{statsTugasan.lewat}</div>
+                  <div className="summary-label">Melebihi Tempoh</div>
+                </div>
               </div>
             </div>
-            <div className="search-input-wrap search-input-sk-wrap">
-              <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Cari no. rujukan, tajuk atau bahagian..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <div className="table-scroll-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>No. Rujukan</th>
-                  <th>Kes</th>
-                  <th>Bahagian Diagihkan</th>
-                  <th>Tarikh Agihan</th>
-                  <th>Tempoh Akhir</th>
-                  <th>Tahap Semasa</th>
-                  <th className="col-action">Tindakan</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCases.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ textAlign: "center", color: "var(--text-soft)", padding: "28px" }}>
-                      Tiada rekod ditemui bagi carian &quot;{searchQuery}&quot;.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredCases.map((c) => {
-                    const needsReview = c.pipelineStage === "Menunggu Semakan Akhir";
-                    const actionLabel = needsReview ? "Semak" : "Butiran";
-                    const btnClass = needsReview ? "btn-tindakan" : "btn-secondary";
+            <div className="table-panel">
+              <div className="table-panel-header">
+                <div>
+                  <div className="table-panel-title">Status Kes Diagihkan</div>
+                  <div className="table-panel-sub">Menunjukkan {filteredCases.length} kes yang memerlukan pemantauan Ketua Jabatan</div>
+                </div>
+                <div className="search-input-wrap search-input-sk-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text" className="search-input"
+                    placeholder="Cari no. rujukan, tajuk atau bahagian..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
 
-                    return (
-                      <tr key={c.ref}>
-                        <td className="td-ref">{c.ref}</td>
-                        <td>
-                          <div className="td-tajuk">{c.title}</div>
-                          <div className="td-tajuk-sub">{c.subtitle}</div>
-                        </td>
-                        <td>
-                          <div className="td-tajuk-sub" style={{ maxWidth: "180px" }}>
-                            {c.assignedDepts.join(", ")}
-                          </div>
-                        </td>
-                        <td className="td-date">{c.assignedDate}</td>
-                        <td
-                          className={`td-tempoh ${
-                            c.pipelineStage === "Melebihi Tempoh" ? "tempoh-overdue" : "tempoh-normal"
-                          }`}
-                        >
-                          {c.deadline}
-                          {c.pipelineStage === "Melebihi Tempoh" && (
-                            <svg
-                              className="deadline-warning-icon"
-                              width="11"
-                              height="11"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="var(--red)"
-                              strokeWidth="2.5"
-                            >
-                              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                              <line x1="12" y1="9" x2="12" y2="13" />
-                              <line x1="12" y1="17" x2="12.01" y2="17" />
-                            </svg>
-                          )}
-                        </td>
-                        <td>
-                          <PipelineStageBadge stage={c.pipelineStage} />
-                        </td>
-                        <td className="col-action">
-                          <button
-                            type="button"
-                            className={btnClass}
-                            onClick={() => setActiveCaseRef(c.ref)}
-                          >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                              <circle cx="11" cy="11" r="8" />
-                              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                            </svg>
-                            {actionLabel}
-                          </button>
+              <div className="table-scroll-wrapper">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>No. Rujukan</th>
+                      <th>Kes</th>
+                      <th>Bahagian Diagihkan</th>
+                      <th>Tarikh Agihan</th>
+                      <th>Tempoh Akhir</th>
+                      <th>Tahap Semasa</th>
+                      <th className="col-action">Tindakan</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCases.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: "center", color: "var(--text-soft)", padding: "28px" }}>
+                          Tiada rekod ditemui bagi carian &quot;{searchQuery}&quot;.
                         </td>
                       </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    ) : (
+                      filteredCases.map((c) => {
+                        const needsReview = c.pipelineStage === "Menunggu Semakan Akhir";
+                        const actionLabel = needsReview ? "Semak" : "Butiran";
+                        const btnClass = needsReview ? "btn-tindakan" : "btn-secondary";
+
+                        return (
+                          <tr key={c.ref}>
+                            <td className="td-ref">{c.ref}</td>
+                            <td>
+                              <div className="td-tajuk">{c.title}</div>
+                              <div className="td-tajuk-sub">{c.subtitle}</div>
+                            </td>
+                            <td>
+                              <div className="td-tajuk-sub" style={{ maxWidth: "180px" }}>
+                                {c.assignedDepts.join(", ")}
+                              </div>
+                            </td>
+                            <td className="td-date">{c.assignedDate}</td>
+                            <td className={`td-tempoh ${c.pipelineStage === "Melebihi Tempoh" ? "tempoh-overdue" : "tempoh-normal"}`}>
+                              {c.deadline}
+                              {c.pipelineStage === "Melebihi Tempoh" && (
+                                <svg className="deadline-warning-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2.5">
+                                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                  <line x1="12" y1="9" x2="12" y2="13" />
+                                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                              )}
+                            </td>
+                            <td>
+                              <PipelineStageBadge stage={c.pipelineStage} />
+                            </td>
+                            <td className="col-action">
+                              <button type="button" className={btnClass} onClick={() => setActiveCaseRef(c.ref)}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <circle cx="11" cy="11" r="8" />
+                                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                </svg>
+                                {actionLabel}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ─── TAB 2: STATUS KETUA BAHAGIAN ─── */}
+        {activeTab === "kb" && (
+          <>
+            <div className="summary-strip" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+              <div className="summary-card">
+                <div className="summary-icon" style={{ borderColor: "var(--amber-border)", background: "var(--amber-bg)" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="summary-val">{statsKB.pending}</div>
+                  <div className="summary-label">Belum Dimulakan</div>
+                </div>
+              </div>
+
+              <div className="summary-card">
+                <div className="summary-icon summary-icon-blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="summary-val">{statsKB.inProgress}</div>
+                  <div className="summary-label">Dalam Proses</div>
+                </div>
+              </div>
+
+              <div className="summary-card">
+                <div className="summary-icon" style={{ borderColor: "var(--green-border)", background: "var(--green-bg)" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="summary-val">{statsKB.completed}</div>
+                  <div className="summary-label">Selesai Bahagian</div>
+                </div>
+              </div>
+
+              <div className="summary-card">
+                <div className="summary-icon" style={{ borderColor: "var(--red-border)", background: "var(--red-bg)" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="summary-val">{statsKB.overdue}</div>
+                  <div className="summary-label">Melebihi Tempoh</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="table-panel">
+              <div className="table-panel-header">
+                <div>
+                  <div className="table-panel-title">Status Kemajuan Setiap Bahagian</div>
+                  <div className="table-panel-sub">Menunjukkan {filteredKB.length} tugasan aktif di bawah tindakan Ketua Bahagian</div>
+                </div>
+                <div className="search-input-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text" className="search-input"
+                    placeholder="Cari no. rujukan, bahagian, atau pegawai..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="table-scroll-wrapper">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>No. Rujukan</th>
+                      <th>Bahagian</th>
+                      <th>Ketua Bahagian / Staf</th>
+                      <th>Tajuk Kes</th>
+                      <th>Kemaskini Akhir</th>
+                      <th>Status Bahagian</th>
+                      <th style={{ textAlign: "right" }}>Butiran</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredKB.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: "center", color: "var(--text-soft)", padding: "28px" }}>
+                          Tiada rekod bahagian ditemui bagi carian &quot;{searchQuery}&quot;.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredKB.map((k) => (
+                        <tr key={k.id}>
+                          <td className="td-ref" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "11.5px" }}>{k.caseRef}</td>
+                          <td style={{ fontWeight: 600, color: "var(--navy)", fontSize: "12.5px" }}>{k.dept}</td>
+                          <td className="td-date">{k.staff}</td>
+                          <td>
+                            <div className="td-tajuk" style={{ maxWidth: "200px" }}>{k.caseTitle}</div>
+                          </td>
+                          <td className="td-date">{k.date}</td>
+                          <td>
+                            <DeptStatusBadge status={k.status} />
+                          </td>
+                          <td style={{ textAlign: "right" }}>
+                            <button type="button" className="btn-secondary" onClick={() => setActiveKBRow(k)}>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                              </svg>
+                              Butiran
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
+      {/* ─── MODALS ─── */}
       <CaseDetailModal
         caseData={activeCase}
         onClose={() => setActiveCaseRef(null)}
@@ -671,6 +932,14 @@ export default function KJStatusKerja() {
         isSubmitting={isSubmitting}
       />
 
+      {activeKBRow && (
+        <ButiranKBModal
+          data={activeKBRow}
+          onClose={() => setActiveKBRow(null)}
+        />
+      )}
+
+      {/* ─── TOAST NOTIFICATION ─── */}
       <div className={`toast${toast ? " show" : ""}`}>
         <div className="toast-icon-wrap">
           <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
