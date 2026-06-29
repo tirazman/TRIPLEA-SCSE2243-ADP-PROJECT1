@@ -7,6 +7,7 @@
 // and case modal) — there is no separate internal case code anymore.
 
 // General info per case (used for the case history modal header).
+
 export const caseRegistry = {
   "PDK/KLG/2026/0912": {
     label: "Pemantauan Kualiti Jalan Raya Pasca Hujan — Kluang Utara",
@@ -26,7 +27,6 @@ export const caseRegistry = {
   },
 };
 
-// Per-department submission status for each case.
 export const caseDeptStatus = {
   "PDK/KLG/2026/0912": [
     {
@@ -118,11 +118,6 @@ export const caseDeptStatus = {
   ],
 };
 
-// One row per case shown in the "Senarai Kes Aktif" table.
-// Overall status is derived from how its departments are progressing:
-//   "Pending"     -> no department has started yet
-//   "In Progress" -> some departments have submitted, some haven't
-//   "Overdue"     -> at least one department has passed its deadline
 export const workStatusCases = [
   {
     ref: "PDK/KLG/2026/0912",
@@ -131,6 +126,7 @@ export const workStatusCases = [
     arrived: "18 Jun 2026",
     deadline: "25 Jun 2026",
     status: "In Progress",
+    keutamaan: "Tinggi",
   },
   {
     ref: "PDK/KLG/2026/0905",
@@ -139,6 +135,7 @@ export const workStatusCases = [
     arrived: "15 Jun 2026",
     deadline: "22 Jun 2026",
     status: "In Progress",
+    keutamaan: "Sederhana",
   },
   {
     ref: "PDK/KLG/2026/0889",
@@ -147,6 +144,7 @@ export const workStatusCases = [
     arrived: "05 Jun 2026",
     deadline: "12 Jun 2026",
     status: "Overdue",
+    keutamaan: "Tinggi",
   },
   {
     ref: "PDK/KLG/2026/0921",
@@ -155,10 +153,10 @@ export const workStatusCases = [
     arrived: "23 Jun 2026",
     deadline: "30 Jun 2026",
     status: "Pending",
+    keutamaan: "Rendah",
   },
 ];
 
-// Display labels + short codes for each department (used in the modal timeline).
 export const deptDisplay = {
   "Bahagian Fizikal": { short: "BF" },
   "Bahagian Masyarakat": { short: "BM" },
@@ -231,9 +229,6 @@ export const pplLaporanData = [
   },
 ];
 
-//KETUA BAHAGIAN PUNYA DATA
-// Data status pengagihan tugasan untuk Ketua Bahagian (KB).
-// KB track sama ada dia dah agihkan tugasan laporan kepada PPL untuk setiap Kes.
 export const kbPengagihanStatusData = [
   {
     ref: "PDK/KLG/2026/0912",
@@ -276,3 +271,4 @@ export const kbPengagihanStatusData = [
     notes: "",
   },
 ];
+
