@@ -229,3 +229,208 @@
 .data-table td.col-action {
   overflow: visible;
 }
+
+/* ════════════════════════════════════════════
+   TAMBAHAN: TOAST NOTIFICATION (TOP RIGHT) - REKABENTUK KOMPAK
+   ════════════════════════════════════════════ */
+.toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--green, #027a48);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: flex-start; 
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  z-index: 9999;
+  
+  
+  width: 360px;
+  max-width: 90vw;
+  height: auto;          
+  max-height: 120px;     
+  
+  
+  transform: translateY(-20px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.toast-icon-wrap {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--green-bg, #ecfdf3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px; 
+}
+
+.toast-icon-wrap svg {
+  width: 12px;
+  height: 12px;
+  stroke: var(--green, #027a48);
+  stroke-width: 3;
+}
+
+.toast-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0; 
+}
+
+.toast-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy, #0d2137);
+  line-height: 1.2;
+}
+
+.toast-msg {
+  font-size: 12px;
+  color: var(--text-mid, #475467);
+  line-height: 1.4;
+  word-break: break-word; 
+}
+
+/* ════════════════════════════════════════════
+   TAMBAHAN: STEPPER & PRATONTON FAIL LAPORAN
+   ════════════════════════════════════════════ */
+.process-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 6px;
+}
+
+.step-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.step-number-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--page-bg);
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-num.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+
+.step-num.done {
+  background: var(--green-bg);
+  border-color: var(--green-border);
+  color: var(--green);
+}
+
+.step-num.done svg {
+  width: 12px;
+  height: 12px;
+  stroke: var(--green);
+  stroke-width: 3;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-label {
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+.step-label.active-label {
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.step-label.done-label {
+  color: var(--text-mid);
+}
+
+.attach-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+}
+
+.kj-file-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.kj-file-icon {
+  color: var(--text-soft);
+  display: flex;
+  align-items: center;
+}
+
+.kj-file-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.kj-file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.kj-file-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kj-file-meta {
+  font-size: 11px;
+  color: var(--text-soft);
+}
+
+.kj-file-view {
+  padding: 4px 10px;
+  font-size: 11px;
+  height: 28px;
+}

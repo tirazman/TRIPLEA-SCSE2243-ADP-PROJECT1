@@ -57,7 +57,6 @@ function UpdateModal({ report, onClose, onSave }) {
         </div>
 
         <div className="case-modal-body">
-
           {/* Pilih Status */}
           <div>
             <div className="case-modal-section-label">Sila Pilih Status Baharu</div>
@@ -96,7 +95,6 @@ function UpdateModal({ report, onClose, onSave }) {
               }}
             />
           </div>
-
         </div>
 
         <div className="case-modal-footer" style={{ gap: '8px' }}>
@@ -110,12 +108,15 @@ function UpdateModal({ report, onClose, onSave }) {
 }
 
 /* ════════════════════════════════════════════
-   MAIN PAGE — PPL Status Kerja
+    MAIN PAGE — PPL Status Kerja
    ════════════════════════════════════════════ */
 export default function PPLStatusKerja() {
   const [laporanDatabase, setLaporanDatabase] = useState(pplLaporanData);
   const [activeReport, setActiveReport] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // State baharu untuk mesej notifikasi pop-up
+  const [toast, setToast] = useState(null);
 
   const pending   = laporanDatabase.filter(r => r.status === "Pending").length;
   const progress  = laporanDatabase.filter(r => r.status === "In Progress").length;
@@ -128,18 +129,31 @@ export default function PPLStatusKerja() {
     return r.ref.toLowerCase().includes(q) || r.aduan.toLowerCase().includes(q) || r.title.toLowerCase().includes(q);
   });
 
+  const showToast = (message) => {
+    setToast(message);
+    // Pop-up akan hilang secara automatik selepas 3.5 saat
+    setTimeout(() => {
+      setToast(null);
+    }, 3500);
+  };
+
   const handleSave = (updated) => {
     setLaporanDatabase(prev => prev.map(r => r.ref === updated.ref ? updated : r));
+    
+    // Pemicu pop-up dipanggil di sini selepas simpanan berjaya
+    const statusLabels = { Pending: "Pending", "In Progress": "Dalam Proses", Completed: "Selesai" };
+    const label = statusLabels[updated.status] || updated.status;
+    showToast(`Status laporan ${updated.ref} berjaya dikemas kini kepada "${label}".`);
   };
 
   return (
     <>
-    <Navbar
-        title="Status Kerja"
-        breadcrumbItems={["e-Urus PDK", "Subsistem 4", "Senarai Laporan Aktif"]}
-        userName="Amirul Haziq Abdullah"
-        userRole="Pegawai Penyedia Laporan"
-    />
+      <Navbar
+          title="Status Kerja"
+          breadcrumbItems={["e-Urus PDK", "Subsistem 4", "Senarai Laporan Aktif"]}
+          userName="Amirul Haziq Abdullah"
+          userRole="Pegawai Penyedia Laporan"
+      />
 
       <div className="content">
 
@@ -154,58 +168,58 @@ export default function PPLStatusKerja() {
         </div>
 
         {/* SUMMARY STRIP */}
-<div className="summary-strip" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-  <div className="summary-card">
-    <div className="summary-icon" style={{ borderColor: 'var(--amber-border)', background: 'var(--amber-bg)' }}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-    </div>
-    <div>
-      <div className="summary-val">{pending}</div>
-      <div className="summary-label">Belum Diambil Tindakan</div>
-    </div>
-  </div>
+        <div className="summary-strip" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div className="summary-card">
+            <div className="summary-icon" style={{ borderColor: 'var(--amber-border)', background: 'var(--amber-bg)' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <div>
+              <div className="summary-val">{pending}</div>
+              <div className="summary-label">Belum Diambil Tindakan</div>
+            </div>
+          </div>
 
-  <div className="summary-card">
-    <div className="summary-icon summary-icon-blue">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-      </svg>
-    </div>
-    <div>
-      <div className="summary-val">{progress}</div>
-      <div className="summary-label">Dalam Proses</div>
-    </div>
-  </div>
+          <div className="summary-card">
+            <div className="summary-icon summary-icon-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <div>
+              <div className="summary-val">{progress}</div>
+              <div className="summary-label">Dalam Proses</div>
+            </div>
+          </div>
 
-  <div className="summary-card">
-    <div className="summary-icon" style={{ borderColor: 'var(--green-border)', background: 'var(--green-bg)' }}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-    </div>
-    <div>
-      <div className="summary-val">{completed}</div>
-      <div className="summary-label">Selesai & Dihantar</div>
-    </div>
-  </div>
+          <div className="summary-card">
+            <div className="summary-icon" style={{ borderColor: 'var(--green-border)', background: 'var(--green-bg)' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div>
+              <div className="summary-val">{completed}</div>
+              <div className="summary-label">Selesai & Dihantar</div>
+            </div>
+          </div>
 
-  <div className="summary-card">
-    <div className="summary-icon" style={{ borderColor: 'var(--red-border)', background: 'var(--red-bg)' }}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
-        <circle cx="12" cy="12" r="10"/>
-        <polyline points="12 6 12 12 16 14"/>
-      </svg>
-    </div>
-    <div>
-      <div className="summary-val">{overdue}</div>
-      <div className="summary-label">Melebihi Tempoh</div>
-    </div>
-  </div>
-</div>
+          <div className="summary-card">
+            <div className="summary-icon" style={{ borderColor: 'var(--red-border)', background: 'var(--red-bg)' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div>
+              <div className="summary-val">{overdue}</div>
+              <div className="summary-label">Melebihi Tempoh</div>
+            </div>
+          </div>
+        </div>
 
         {/* TABLE PANEL */}
         <div className="table-panel">
@@ -286,15 +300,15 @@ export default function PPLStatusKerja() {
             </tr>
             ))}
 
-    {filtered.length === 0 && (
-      <tr>
-        <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-soft)', padding: '28px' }}>
-          Tiada rekod laporan ditemui bagi carian "{searchQuery}".
-        </td>
-      </tr>
-    )}
-  </tbody>
-</table>
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-soft)', padding: '28px' }}>
+                  Tiada rekod laporan ditemui bagi carian "{searchQuery}".
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
         </div>
 
       </div>
@@ -307,6 +321,19 @@ export default function PPLStatusKerja() {
           onSave={handleSave}
         />
       )}
+
+      {/* ─── TOAST NOTIFICATION ELEMEN (Top-Right) ─── */}
+      <div className={`toast${toast ? " show" : ""}`}>
+        <div className="toast-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <div className="toast-body">
+          <div className="toast-title">Berjaya</div>
+          <div className="toast-msg">{toast}</div>
+        </div>
+      </div>
     </>
   );
 }
