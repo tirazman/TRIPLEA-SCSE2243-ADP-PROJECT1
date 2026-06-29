@@ -5,6 +5,8 @@ import "../../styles/pages/PenerimaanLaporan.css";
 import "../../styles/pages/PengagihanTugasan.css";
 import "../../styles/pages/PengagihanBahagian.css";
 
+const ACTION_LABEL = "Semak";
+
 const STATUS_MAP = {
   menunggu: { label: "Menunggu Tindakan", badge: "badge-pending" },
   diproses: { label: "Sedang Diproses", badge: "badge-processing" },
@@ -31,6 +33,89 @@ function formatToday() {
   return `${today.getDate()} ${bulan[today.getMonth()]} ${today.getFullYear()}`;
 }
 
+/** Belum diagih = status menunggu sahaja */
+function canAssign(doc) {
+  return doc.status === "menunggu";
+}
+
+function SubmissionInfo({ doc }) {
+  return (
+    <div className="case-ref-card">
+      <div className="case-ref-label">Penyerahan daripada Pembantu Tadbir</div>
+
+      <div className="kj-submission-grid">
+        <div className="kj-field kj-field--full">
+          <div className="meta-key">Tajuk Dokumen</div>
+          <div className="kj-field-val">{doc.title}</div>
+        </div>
+
+        <div className="kj-field kj-field--full">
+          <div className="meta-key">Catatan Tambahan</div>
+          <div className="kj-field-val">{doc.catatan}</div>
+        </div>
+
+        <div className="kj-field">
+          <div className="meta-key">Tarikh Terima</div>
+          <div className="kj-field-val kj-mono">{doc.tarikh}</div>
+        </div>
+
+        <div className="kj-field">
+          <div className="meta-key">Tempoh Akhir</div>
+          <div className="kj-field-val kj-mono">{doc.akhir}</div>
+        </div>
+      </div>
+
+      <div className="attach-label">Fail Dimuat Naik</div>
+      <div className="kj-file-card">
+        <div className="kj-file-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+        </div>
+        <div className="kj-file-info">
+          <div className="kj-file-name">{doc.file.name}</div>
+          <div className="kj-file-meta">
+            {doc.file.size} • {doc.file.type.toUpperCase()}
+          </div>
+        </div>
+        <button type="button" className="btn-outline kj-file-view">
+          Lihat Fail
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AssignmentHistory({ assignedTo }) {
+  if (!assignedTo.length) return null;
+
+  return (
+    <div className="kj-history-box">
+      <div className="kj-history-title">Sejarah Pengagihan</div>
+      {assignedTo.map((entry, i) => {
+        const isLatest = i === assignedTo.length - 1;
+        return (
+          <div key={`${entry.tarikh}-${i}`} className={`kj-history-entry${isLatest ? " latest" : ""}`}>
+            <div className="kj-history-meta">
+              <span className="kj-history-num">Pengagihan #{i + 1}</span>
+              <span className="kj-history-date">{entry.tarikh}</span>
+              {isLatest && <span className="kj-history-badge">Terkini</span>}
+            </div>
+            <div className="kj-history-tags">
+              {entry.jabatan.map((j) => (
+                <span key={j} className="kj-history-tag">
+                  {j}
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function KJPengagihanBahagian() {
   const [documents, setDocuments] = useState(initialDocuments);
   const [search, setSearch] = useState("");
@@ -49,6 +134,7 @@ export default function KJPengagihanBahagian() {
   const summarizeTimerRef = useRef(null);
 
   const selectedDoc = documents.find((d) => d.id === selectedDocId) ?? null;
+  const isReadOnly = selectedDoc ? !canAssign(selectedDoc) : false;
 
   const stats = useMemo(
     () => ({
@@ -75,7 +161,7 @@ export default function KJPengagihanBahagian() {
     };
   }, []);
 
-  const showToast = (msg) => {
+  const showToastMsg = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 4500);
   };
@@ -102,7 +188,7 @@ export default function KJPengagihanBahagian() {
   };
 
   const handleSummarize = () => {
-    if (!selectedDoc || aiLoading) return;
+    if (!selectedDoc || aiLoading || isReadOnly) return;
 
     setAiLoading(true);
     setAiResult(null);
@@ -138,7 +224,7 @@ export default function KJPengagihanBahagian() {
   };
 
   const confirmAssign = () => {
-    if (!selectedDoc || selectedDepts.length === 0) return;
+    if (!selectedDoc || selectedDepts.length === 0 || isReadOnly) return;
 
     const jumlahJabatan = selectedDepts.length;
 
@@ -159,13 +245,7 @@ export default function KJPengagihanBahagian() {
 
     setShowConfirm(false);
     closePanel();
-    showToast(`Dokumen ${selectedDoc.id} berjaya diagihkan kepada ${jumlahJabatan} bahagian.`);
-  };
-
-  const getActionLabel = (status) => {
-    if (status === "selesai") return "Lihat";
-    if (status === "diproses") return "Semak";
-    return "Semak & Agih";
+    showToastMsg(`Dokumen ${selectedDoc.id} berjaya diagihkan kepada ${jumlahJabatan} bahagian.`);
   };
 
   return (
@@ -270,18 +350,20 @@ export default function KJPengagihanBahagian() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th style={{ width: "150px" }}>No. Rujukan</th>
+                  <th style={{ width: "140px" }}>No. Rujukan</th>
                   <th>Tajuk Aduan</th>
-                  <th style={{ width: "110px" }}>Tarikh Terima</th>
-                  <th style={{ width: "110px" }}>Tempoh Akhir</th>
-                  <th style={{ width: "130px" }}>Status</th>
-                  <th style={{ width: "130px" }}>Tindakan</th>
+                  <th style={{ width: "100px" }}>Tarikh Terima</th>
+                  <th style={{ width: "100px" }}>Tempoh Akhir</th>
+                  <th style={{ width: "120px" }}>Status</th>
+                  <th style={{ width: "90px", textAlign: "center" }}>Tindakan</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredDocs.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="td-empty">Tiada dokumen dijumpai.</td>
+                    <td colSpan={6} className="td-empty">
+                      Tiada dokumen dijumpai.
+                    </td>
                   </tr>
                 ) : (
                   filteredDocs.map((doc) => {
@@ -309,20 +391,16 @@ export default function KJPengagihanBahagian() {
                             {statusInfo.label}
                           </span>
                         </td>
-                        <td>
+                        <td style={{ textAlign: "center" }}>
                           <button
                             type="button"
-                            className={`btn-tindakan${doc.status === "selesai" ? " kj-btn-done" : ""}`}
+                            className="btn-outline kj-btn-action"
                             onClick={(e) => {
                               e.stopPropagation();
                               openPanel(doc);
                             }}
                           >
-                            <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                            {getActionLabel(doc.status)}
+                            {ACTION_LABEL}
                           </button>
                         </td>
                       </tr>
@@ -347,6 +425,11 @@ export default function KJPengagihanBahagian() {
                 <div>
                   <div className="kj-drawer-title">{selectedDoc.title}</div>
                   <div className="kj-drawer-ref">{selectedDoc.id}</div>
+                  {isReadOnly && (
+                    <p className="kj-readonly-note">
+                      Dokumen ini telah diagihkan. Paparan maklumat sahaja.
+                    </p>
+                  )}
                 </div>
                 <button type="button" className="kb-modal-close-btn" onClick={closePanel}>
                   <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -357,155 +440,115 @@ export default function KJPengagihanBahagian() {
               </div>
 
               <div className="kj-drawer-body">
-                <div className="case-ref-card">
-                  <div className="case-ref-label">Maklumat Dokumen</div>
-                  <div className="kj-meta-grid">
-                    <div className="case-meta-item">
-                      <div className="meta-key">Lokasi</div>
-                      <div className="meta-val">{selectedDoc.loc}</div>
-                    </div>
-                    <div className="case-meta-item">
-                      <div className="meta-key">Kategori</div>
-                      <div className="meta-val">{selectedDoc.cat}</div>
-                    </div>
-                    <div className="case-meta-item">
-                      <div className="meta-key">Tarikh Terima</div>
-                      <div className="meta-val">{selectedDoc.tarikh}</div>
-                    </div>
-                    <div className="case-meta-item">
-                      <div className="meta-key">Tempoh Akhir</div>
-                      <div className="meta-val">{selectedDoc.akhir}</div>
-                    </div>
-                  </div>
-                  <div className="kj-doc-content">{selectedDoc.content}</div>
-                </div>
+                <SubmissionInfo doc={selectedDoc} />
+                <AssignmentHistory assignedTo={selectedDoc.assignedTo} />
 
-                {selectedDoc.assignedTo.length > 0 && (
-                  <div className="kj-history-box">
-                    <div className="kj-history-title">Sejarah Pengagihan</div>
-                    {selectedDoc.assignedTo.map((entry, i) => {
-                      const isLatest = i === selectedDoc.assignedTo.length - 1;
-                      return (
-                        <div key={`${entry.tarikh}-${i}`} className={`kj-history-entry${isLatest ? " latest" : ""}`}>
-                          <div className="kj-history-meta">
-                            <span className="kj-history-num">Pengagihan #{i + 1}</span>
-                            <span className="kj-history-date">{entry.tarikh}</span>
-                            {isLatest && <span className="kj-history-badge">Terkini</span>}
-                          </div>
-                          <div className="kj-history-tags">
-                            {entry.jabatan.map((j) => (
-                              <span key={j} className="kj-history-tag">{j}</span>
-                            ))}
-                          </div>
+                {/* AI + Agih — hanya untuk belum diagih (menunggu) */}
+                {!isReadOnly && (
+                  <>
+                    <div className="instruction-card">
+                      <div className="instruction-icon">
+                        <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="3" />
+                          <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3" />
+                        </svg>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div className="instruction-label">Ringkasan & Cadangan Bahagian</div>
+                        <div className="instruction-text" style={{ marginBottom: 12 }}>
+                          Analisis automatik fail yang dimuat naik oleh Pembantu Tadbir
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <div className="instruction-card">
-                  <div className="instruction-icon">
-                    <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="3" />
-                      <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3" />
-                    </svg>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div className="instruction-label">Ringkasan & Cadangan Bahagian</div>
-                    <div className="instruction-text" style={{ marginBottom: 12 }}>
-                      Analisis automatik menggunakan kecerdasan buatan
-                    </div>
-                    <button
-                      type="button"
-                      className="hantar-btn"
-                      style={{ width: "auto", padding: "8px 14px", fontSize: "12.5px" }}
-                      onClick={handleSummarize}
-                      disabled={aiLoading}
-                    >
-                      {aiLoading ? "Menganalisis..." : hasSummarized ? "Jana Semula" : "Jana Ringkasan"}
-                    </button>
-                  </div>
-                </div>
-
-                {aiLoading && (
-                  <div className="kj-ai-loading">
-                    <div className="loader-ring" />
-                    <span>{loadingText}</span>
-                  </div>
-                )}
-
-                {!aiLoading && !hasSummarized && (
-                  <div className="kj-ai-placeholder">
-                    Klik butang &quot;Jana Ringkasan&quot; untuk memulakan analisis AI pada dokumen ini.
-                  </div>
-                )}
-
-                {!aiLoading && hasSummarized && aiResult && (
-                  <div className="kj-ai-result">
-                    <div className="kj-summary-text">{aiResult.ringkasan}</div>
-                    <div className="kj-dept-label">Cadangan Bahagian Yang Sesuai</div>
-                    <div className="kj-dept-hint">Boleh pilih lebih daripada satu bahagian</div>
-                    <div className="kj-dept-cards">
-                      {aiResult.cadangan_bahagian.map((dept) => (
                         <button
-                          key={dept.nama_bahagian}
                           type="button"
-                          className={`kj-dept-card${selectedDepts.includes(dept.nama_bahagian) ? " chosen" : ""}`}
-                          onClick={() => toggleDept(dept.nama_bahagian)}
+                          className="hantar-btn"
+                          style={{ width: "auto", padding: "8px 14px", fontSize: "12.5px" }}
+                          onClick={handleSummarize}
+                          disabled={aiLoading}
                         >
-                          <div className="kj-dept-name">{dept.nama_bahagian}</div>
-                          <div className="kj-dept-reason">{dept.sebab}</div>
-                          <div className="kj-conf-bar-wrap">
-                            <div className="kj-conf-bar" style={{ width: `${dept.keyakinan}%` }} />
-                          </div>
-                          <div className="kj-conf-label">Keyakinan: {dept.keyakinan}%</div>
+                          {aiLoading ? "Menganalisis..." : hasSummarized ? "Jana Semula" : "Jana Ringkasan"}
                         </button>
-                      ))}
+                      </div>
                     </div>
-                  </div>
-                )}
 
-                <div
-                  className="kj-assign-section"
-                  style={{
-                    opacity: selectedDoc.status === "selesai" ? 0.4 : 1,
-                    pointerEvents: selectedDoc.status === "selesai" ? "none" : "auto",
-                  }}
-                >
-                  <div className="panel-title" style={{ marginBottom: 10 }}>Agih ke Bahagian</div>
-
-                  <div className="kj-selected-depts">
-                    {selectedDepts.length === 0 ? (
-                      <span className="kj-ai-placeholder" style={{ padding: 0 }}>
-                        Pilih sekurang-kurangnya satu bahagian daripada cadangan AI di atas.
-                      </span>
-                    ) : (
-                      selectedDepts.map((name) => (
-                        <span key={name} className="kj-sel-tag">
-                          {name}
-                          <button type="button" onClick={() => removeDept(name)}>×</button>
-                        </span>
-                      ))
+                    {aiLoading && (
+                      <div className="kj-ai-loading">
+                        <div className="loader-ring" />
+                        <span>{loadingText}</span>
+                      </div>
                     )}
-                  </div>
 
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Nota tambahan kepada bahagian (pilihan)..."
-                    value={assignNote}
-                    onChange={(e) => setAssignNote(e.target.value)}
-                  />
+                    {!aiLoading && !hasSummarized && (
+                      <div className="kj-ai-placeholder">
+                        Klik &quot;Jana Ringkasan&quot; untuk analisis AI pada fail dokumen ini.
+                      </div>
+                    )}
 
-                  <button
-                    type="button"
-                    className="btn-primary-submit"
-                    style={{ width: "100%", justifyContent: "center" }}
-                    disabled={selectedDepts.length === 0}
-                    onClick={() => setShowConfirm(true)}
-                  >
-                    Agih ke Bahagian
-                  </button>
-                </div>
+                    {!aiLoading && hasSummarized && aiResult && (
+                      <div className="kj-ai-result">
+                        <div className="kj-summary-text">{aiResult.ringkasan}</div>
+                        <div className="kj-dept-label">Cadangan Bahagian Yang Sesuai</div>
+                        <div className="kj-dept-hint">Boleh pilih lebih daripada satu bahagian</div>
+                        <div className="kj-dept-cards">
+                          {aiResult.cadangan_bahagian.map((dept) => (
+                            <button
+                              key={dept.nama_bahagian}
+                              type="button"
+                              className={`kj-dept-card${selectedDepts.includes(dept.nama_bahagian) ? " chosen" : ""}`}
+                              onClick={() => toggleDept(dept.nama_bahagian)}
+                            >
+                              <div className="kj-dept-name">{dept.nama_bahagian}</div>
+                              <div className="kj-dept-reason">{dept.sebab}</div>
+                              <div className="kj-conf-bar-wrap">
+                                <div className="kj-conf-bar" style={{ width: `${dept.keyakinan}%` }} />
+                              </div>
+                              <div className="kj-conf-label">Keyakinan: {dept.keyakinan}%</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="kj-assign-section">
+                      <div className="panel-title" style={{ marginBottom: 10 }}>
+                        Agih ke Bahagian
+                      </div>
+
+                      <div className="kj-selected-depts">
+                        {selectedDepts.length === 0 ? (
+                          <span className="kj-ai-placeholder" style={{ padding: 0 }}>
+                            Pilih sekurang-kurangnya satu bahagian daripada cadangan AI di atas.
+                          </span>
+                        ) : (
+                          selectedDepts.map((name) => (
+                            <span key={name} className="kj-sel-tag">
+                              {name}
+                              <button type="button" onClick={() => removeDept(name)}>
+                                ×
+                              </button>
+                            </span>
+                          ))
+                        )}
+                      </div>
+
+                      <textarea
+                        className="form-textarea"
+                        placeholder="Nota tambahan kepada bahagian (pilihan)..."
+                        value={assignNote}
+                        onChange={(e) => setAssignNote(e.target.value)}
+                      />
+
+                      <button
+                        type="button"
+                        className="btn-primary-submit"
+                        style={{ width: "100%", justifyContent: "center" }}
+                        disabled={selectedDepts.length === 0}
+                        onClick={() => setShowConfirm(true)}
+                      >
+                        Agih ke Bahagian
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </>
           )}
@@ -537,7 +580,9 @@ export default function KJPengagihanBahagian() {
           <div className="kb-modal-body">
             <div className="kj-modal-dept-list">
               {selectedDepts.map((name) => (
-                <span key={name} className="kj-sel-tag">{name}</span>
+                <span key={name} className="kj-sel-tag">
+                  {name}
+                </span>
               ))}
             </div>
           </div>

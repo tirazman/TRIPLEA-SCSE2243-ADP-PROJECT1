@@ -6,8 +6,8 @@ import PTDashboard from "./view/PembantuTadbir/PTDashboard";
 import PTPenerimaanLaporan from "./view/PembantuTadbir/PTPenerimaanLaporan";
 
 import KJDashboard from "./view/KetuaJabatan/KJDashboard";
-import KJLaporanDihantar from "./view/KetuaJabatan/KJLaporanDihantar";
 import KJPengagihanBahagian from "./view/KetuaJabatan/KJPengagihanBahagian";
+import KJStatusKerja from "./view/KetuaJabatan/KJStatusKerja";
 
 import KBDashboard from "./view/KetuaBahagian/KBDashboard";
 import KBArahanKetuaJabatan from "./view/KetuaBahagian/KBArahanKetuaJabatan";
@@ -43,7 +43,7 @@ function App() {
         <Route path="/ketua-jabatan" element={<KJDashboard />}>
           <Route index element={<Navigate to="pengagihan-bahagian" replace />} />
           <Route path="pengagihan-bahagian" element={<KJPengagihanBahagian />} />
-          <Route path="laporan-dihantar" element={<KJLaporanDihantar />} />
+          <Route path="status-kerja" element={<KJStatusKerja />} />
         </Route>
 
         {/*Ketua Bahagian — nested so <Outlet /> inside KBDashboard (the layout wrapper) has somewhere to render the actual page.*/}

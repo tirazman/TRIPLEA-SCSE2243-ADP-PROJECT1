@@ -45,9 +45,6 @@ export default function Sidebar({
           >
             {item.icon}
             {item.label}
-            {item.badge != null && item.badge > 0 && (
-              <span className="nav-badge">{item.badge}</span>
-            )}
           </NavLink>
         ))}
 

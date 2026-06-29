@@ -1,24 +1,9 @@
 import DashboardLayout from "../../components/common/DashboardLayout";
-import { initialDocuments } from "../../data/pengagihanBahagianData";
-
-const menungguCount = initialDocuments.filter((d) => d.status === "menunggu").length;
 
 const menuItems = [
   {
-    label: "Laporan Dihantar",
-    path: "/ketua-jabatan/laporan-dihantar",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-        <polyline points="17 8 12 3 7 8" />
-        <line x1="12" y1="3" x2="12" y2="15" />
-      </svg>
-    ),
-  },
-  {
     label: "Pengagihan kepada Bahagian",
     path: "/ketua-jabatan/pengagihan-bahagian",
-    badge: menungguCount,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />

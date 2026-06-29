@@ -10,6 +10,9 @@
   border-color: #bfdbfe;
 }
 
+.btn-outline { padding: 5px 10px; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 11.5px; font-weight: 500; color: var(--text-mid); cursor: pointer; transition: all 0.15s; }
+.btn-outline:hover { background: var(--surface-2); color: var(--navy); border-color: var(--navy-mid); }
+
 .kj-toolbar {
   display: flex;
   align-items: center;
@@ -372,6 +375,118 @@
   }
 
   .kj-meta-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Action button — stays inside column */
+.kj-btn-action {
+  font-size: 11px;
+  padding: 5px 8px;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.data-table td:last-child {
+  overflow: hidden;
+}
+
+/* Submission info (drawer) */
+.kj-submission-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.kj-field--full {
+  grid-column: 1 / -1;
+}
+
+.kj-field-val {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+
+.kj-mono {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11.5px;
+}
+
+.attach-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 8px 0 6px;
+}
+
+.kj-file-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  border-radius: var(--radius-md);
+}
+
+.kj-file-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: rgba(2, 122, 72, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.kj-file-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.kj-file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.kj-file-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  font-family: "IBM Plex Mono", monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kj-file-meta {
+  font-size: 10.5px;
+  color: var(--text-soft);
+  margin-top: 2px;
+}
+
+.kj-file-view {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+.kj-readonly-note {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+  .kj-submission-grid {
     grid-template-columns: 1fr;
   }
 }
