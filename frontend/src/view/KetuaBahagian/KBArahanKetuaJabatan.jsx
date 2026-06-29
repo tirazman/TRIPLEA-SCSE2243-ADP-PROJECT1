@@ -61,6 +61,13 @@ function ViewSenarai({ onSemak }) {
         </div>
 
         <table className="data-table">
+          <colgroup>
+            <col style={{ width: "130px" }} />
+            <col />
+            <col style={{ width: "115px" }} />
+            <col style={{ width: "90px" }} />
+            <col style={{ width: "70px" }} />
+          </colgroup>
           <thead>
             <tr>
               <th>No. Rujukan</th>
@@ -330,7 +337,7 @@ export default function KBArahanKetuaJabatan() {
         title={navTitle}
         breadcrumbItems={breadcrumb}
         userName="Encik Rashdan bin Ismail"
-        userRole="Ketua Bahagian"
+        userRole="Ketua Bahagian-Fizikal"
       />
 
       <div className="content">

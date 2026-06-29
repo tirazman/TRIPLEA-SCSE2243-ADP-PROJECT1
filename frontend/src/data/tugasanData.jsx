@@ -1,10 +1,10 @@
-// Dummy data for "Pengagihan Tugasan" (Ketua Bahagian assigns work to
-// Pegawai Penyedia Laporan). Cases here are ones that have already been
-// arahan-ed by Ketua Jabatan (see "Arahan Ketua Jabatan" page) and now
-// need field officers to gather supporting info before KB compiles the
-// final departmental report.
+// tugasanData.jsx
+// Cases here mirror the arahanKetuaJabatanData — KB uses the same
+// caseRef (which maps to kes.id in arahanKetuaJabatanData) when
+// assigning work to Pegawai Penyedia Laporan.
 
 // Cases available to pick from when creating a new tugasan.
+// caseRef matches kes.id from arahanKetuaJabatanData.
 export const availableCases = [
   {
     ref: "PDK/KLG/2026/0847",
@@ -31,10 +31,12 @@ export const officerList = [
 
 export const priorityLevels = ["Tinggi", "Sederhana", "Rendah"];
 
-// Existing tugasan entries shown in the table when the page first loads.
+// Status values:
+//   "Sedang Diproses" — tugasan aktif, boleh dikemaskini
+//   "Selesai"         — tugasan telah selesai, tidak boleh dikemaskini
 export const initialTugasanList = [
   {
-    id: "TGS-2026-0142",
+    // Matches arahanKetuaJabatanData kes PDK/KLG/2026/0847
     caseRef: "PDK/KLG/2026/0847",
     caseTitle: "Banjir Kilat — Jalan Dato' Abdul Rahman",
     officer: "En. Shahril Bin Hamid",
@@ -43,10 +45,10 @@ export const initialTugasanList = [
     priority: "Tinggi",
     dateGiven: "07 Jun 2026",
     deadline: "13 Jun 2026",
-    status: "Menunggu Laporan",
+    status: "Sedang Diproses",
   },
   {
-    id: "TGS-2026-0143",
+    // Matches arahanKetuaJabatanData kes PDK/KLG/2026/0831
     caseRef: "PDK/KLG/2026/0831",
     caseTitle: "Kerosakan Lampu Isyarat Simpang Renggam",
     officer: "Pn. Norlia Binti Daud",
@@ -55,10 +57,10 @@ export const initialTugasanList = [
     priority: "Sederhana",
     dateGiven: "08 Jun 2026",
     deadline: "14 Jun 2026",
-    status: "Menunggu Laporan",
+    status: "Sedang Diproses",
   },
   {
-    id: "TGS-2026-0138",
+    // Matches arahanKetuaJabatanData kes PDK/KLG/2026/0819
     caseRef: "PDK/KLG/2026/0819",
     caseTitle: "Aduan Jalan Berlubang Kampung Melayu",
     officer: "En. Zulhilmi Bin Rahmat",
@@ -67,10 +69,10 @@ export const initialTugasanList = [
     priority: "Tinggi",
     dateGiven: "02 Jun 2026",
     deadline: "06 Jun 2026",
-    status: "Lewat",
+    status: "Sedang Diproses",
   },
   {
-    id: "TGS-2026-0129",
+    // Matches arahanKetuaJabatanData kes PDK/KLG/2026/0819
     caseRef: "PDK/KLG/2026/0819",
     caseTitle: "Aduan Jalan Berlubang Kampung Melayu",
     officer: "En. Rashdan Bin Ismail",

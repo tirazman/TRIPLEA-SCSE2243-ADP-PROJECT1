@@ -8,13 +8,15 @@ import {
 } from "../../data/tugasanData";
 import "../../styles/pages/PengagihanTugasan.css";
 
-/* ─── Badge status tugasan (Belum Selesai / Selesai sahaja) ─── */
+/* ─── Badge status tugasan ─── */
+// Hanya dua status: "Sedang Diproses" dan "Selesai".
+// Hanya "Sedang Diproses" boleh dikemaskini.
 function TugasanStatusBadge({ status }) {
   const isSelesai = status === "Selesai";
   return (
-    <span className={`status-badge ${isSelesai ? "badge-received" : "badge-pending"}`}>
+    <span className={`status-badge ${isSelesai ? "badge-received" : "badge-progress"}`}>
       <span className="badge-dot"></span>
-      {isSelesai ? "Selesai" : "Belum Selesai"}
+      {isSelesai ? "Selesai" : "Sedang Diproses"}
     </span>
   );
 }
@@ -146,13 +148,14 @@ function NewTugasanModal({ onClose, onCreate }) {
 }
 
 /* ─── Modal: Lihat & Urus Tugasan ─── */
+// Edit hanya dibenarkan untuk tugasan berstatus "Sedang Diproses".
 function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState(null);
 
   if (!tugasan) return null;
 
-  const isPending = tugasan.status !== "Selesai";
+  const isSedangDiproses = tugasan.status === "Sedang Diproses";
 
   const handleEditOpen = () => {
     setEditForm({
@@ -169,13 +172,13 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
       alert("Sila lengkapkan semua maklumat.");
       return;
     }
-    onUpdate(tugasan.id, editForm);
+    onUpdate(tugasan.caseRef, tugasan.officer, tugasan.dateGiven, editForm);
     setEditMode(false);
   };
 
   const handleRemove = () => {
-    if (window.confirm(`Anda pasti mahu membatalkan tugasan ${tugasan.id}?`)) {
-      onRemove(tugasan.id);
+    if (window.confirm(`Anda pasti mahu membatalkan tugasan kes ${tugasan.caseRef}?`)) {
+      onRemove(tugasan.caseRef, tugasan.officer, tugasan.dateGiven);
       onClose();
     }
   };
@@ -187,7 +190,7 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
       <div className="kb-modal-box" onClick={(e) => e.stopPropagation()}>
         <div className="kb-modal-header">
           <div>
-            <div className="kb-modal-title">{tugasan.id}</div>
+            <div className="kb-modal-title">{tugasan.caseRef}</div>
             <div className="kb-modal-subtitle">
               {editMode ? "Kemaskini maklumat tugasan" : `Ditugaskan kepada ${tugasan.officer}`}
             </div>
@@ -241,7 +244,7 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                         <polyline points="14 2 14 8 20 8" />
                       </svg>
-                      No. Tugasan: <strong>{tugasan.id}</strong>
+                      No. Rujukan: <strong>{tugasan.caseRef}</strong>
                     </span>
                   </div>
                 </div>
@@ -298,7 +301,7 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
         </div>
 
         <div className="kb-modal-footer">
-          {isPending && !editMode && (
+          {isSedangDiproses && !editMode && (
             <button type="button" className="btn-danger-outline" onClick={handleRemove}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <polyline points="3 6 5 6 21 6" />
@@ -318,7 +321,7 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
             ) : (
               <>
                 <button type="button" className="btn-secondary" onClick={onClose}>Tutup</button>
-                {isPending && (
+                {isSedangDiproses && (
                   <button type="button" className="btn-primary-submit" onClick={handleEditOpen}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
@@ -340,7 +343,10 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
    MAIN PAGE — Pengagihan Tugasan
    ════════════════════════════════════════════════════════════════ */
 export default function KBPengagihanTugasan() {
-  const [tugasanList, setTugasanList] = useState(initialTugasanList);
+  const [tugasanList, setTugasanList] = useState(
+    // Generate a stable unique key per entry since we removed id field
+    initialTugasanList.map((t, i) => ({ ...t, _key: i }))
+  );
   const [showNewModal, setShowNewModal] = useState(false);
   const [viewingTugasan, setViewingTugasan] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -348,7 +354,6 @@ export default function KBPengagihanTugasan() {
   const filteredList = tugasanList.filter((t) => {
     const q = searchQuery.toLowerCase();
     return (
-      t.id.toLowerCase().includes(q) ||
       t.caseRef.toLowerCase().includes(q) ||
       t.caseTitle.toLowerCase().includes(q) ||
       t.officer.toLowerCase().includes(q)
@@ -358,33 +363,35 @@ export default function KBPengagihanTugasan() {
   const handleCreateTugasan = (form) => {
     const caseInfo = availableCases.find((c) => c.ref === form.caseRef);
     const newEntry = {
-      id: `TGS-2026-${String(1000 + tugasanList.length).slice(-4)}`,
       caseRef: form.caseRef,
-      caseTitle: caseInfo?.title || "",
+      caseTitle: caseInfo?.title || form.title,
       officer: form.officer,
       instruction: form.instruction,
       priority: form.priority,
       dateGiven: new Date().toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }),
       deadline: new Date(form.deadline).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }),
       deadlineRaw: form.deadline,
-      status: "Menunggu Laporan",
+      status: "Sedang Diproses",
+      _key: Date.now(),
     };
     setTugasanList((prev) => [newEntry, ...prev]);
     setShowNewModal(false);
   };
 
-  const handleRemoveTugasan = (id) => {
-    setTugasanList((prev) => prev.filter((t) => t.id !== id));
+  // Identify entry by caseRef + officer + dateGiven (unique combo)
+  const matchEntry = (t, caseRef, officer, dateGiven) =>
+    t.caseRef === caseRef && t.officer === officer && t.dateGiven === dateGiven;
+
+  const handleRemoveTugasan = (caseRef, officer, dateGiven) => {
+    setTugasanList((prev) => prev.filter((t) => !matchEntry(t, caseRef, officer, dateGiven)));
   };
 
-  const handleUpdateTugasan = (id, editForm) => {
+  const handleUpdateTugasan = (caseRef, officer, dateGiven, editForm) => {
     setTugasanList((prev) =>
       prev.map((t) => {
-        if (t.id !== id) return t;
+        if (!matchEntry(t, caseRef, officer, dateGiven)) return t;
         const newDeadline = new Date(editForm.deadline).toLocaleDateString("ms-MY", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
+          day: "2-digit", month: "short", year: "numeric",
         });
         const updated = {
           ...t,
@@ -406,7 +413,7 @@ export default function KBPengagihanTugasan() {
         title="Pengagihan Tugasan"
         breadcrumbItems={["e-Urus PDK", "Ketua Bahagian", "Pengagihan Tugasan"]}
         userName="Hafizul Hakim"
-        userRole="Ketua Bahagian"
+        userRole="Ketua Bahagian-Fizikal"
       />
 
       <div className="content">
@@ -418,7 +425,6 @@ export default function KBPengagihanTugasan() {
             </p>
           </div>
 
-          {/* Action bar: search + new button */}
           <div className="page-action-bar">
             <div className="search-box">
               <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -465,29 +471,37 @@ export default function KBPengagihanTugasan() {
 
           <div className="table-scroll-wrapper">
             <table className="data-table">
+              <colgroup>
+                <col style={{ width: "150px" }} />
+                <col />
+                <col style={{ width: "160px" }} />
+                <col style={{ width: "105px" }} />
+                <col style={{ width: "105px" }} />
+                <col style={{ width: "120px" }} />
+                <col style={{ width: "70px" }} />
+              </colgroup>
               <thead>
                 <tr>
-                  <th style={{ width: "110px" }}>No. Tugasan</th>
+                  <th>No. Rujukan</th>
                   <th>Tajuk Aduan</th>
-                  <th style={{ width: "160px" }}>Pegawai Ditugaskan</th>
-                  <th style={{ width: "105px" }}>Tarikh Diberi</th>
-                  <th style={{ width: "105px" }}>Tarikh Akhir</th>
-                  <th style={{ width: "110px" }}>Status</th>
-                  <th style={{ width: "90px", textAlign: "center" }}>Tindakan</th>
+                  <th>Pegawai Ditugaskan</th>
+                  <th>Tarikh Diberi</th>
+                  <th>Tarikh Akhir</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: "center" }}>Tindakan</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredList.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="td-empty">Tiada tugasan ditemui.</td>
+                    <td colSpan={7} className="td-empty">Tiada tugasan ditemui.</td>
                   </tr>
                 ) : (
                   filteredList.map((t) => (
-                    <tr key={t.id}>
-                      <td className="td-ref">{t.id}</td>
+                    <tr key={t._key}>
+                      <td className="td-ref">{t.caseRef}</td>
                       <td>
                         <div className="td-tajuk">{t.caseTitle}</div>
-                        <div className="td-tajuk-sub">{t.caseRef}</div>
                       </td>
                       <td className="td-date">{t.officer}</td>
                       <td className="td-date">{t.dateGiven}</td>
