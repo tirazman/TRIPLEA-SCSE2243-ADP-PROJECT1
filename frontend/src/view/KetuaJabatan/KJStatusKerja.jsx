@@ -880,7 +880,7 @@ export default function KJStatusKerja() {
                       <th>Ketua Bahagian / Staf</th>
                       <th>Tajuk Kes</th>
                       <th>Kemaskini Akhir</th>
-                      <th>Status Bahagian</th>
+                      <th>Status Semasa</th>
                       <th style={{ textAlign: "right" }}>Butiran</th>
                     </tr>
                   </thead>
