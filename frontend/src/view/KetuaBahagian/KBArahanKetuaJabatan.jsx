@@ -38,7 +38,6 @@ function ViewSenarai({ onSemak }) {
             Semak butiran kes yang diarahkan oleh Ketua Jabatan, sediakan laporan penuh and hantar kepada Pegawai Penyedia Laporan untuk tindakan seterusnya.
           </p>
         </div>
-        {/* Lencana status kes menunggu tindakan telah dibuang dari sini */}
       </div>
 
       <div className="summary-strip">
@@ -120,9 +119,7 @@ function ViewSenarai({ onSemak }) {
                   <div className="td-tajuk">{kes.tajuk}</div>
                   <div className="td-tajuk-sub">{kes.subtajuk}</div>
                 </td>
-                {/* Memaparkan tarikh sahaja tanpa format masa */}
                 <td className="td-date">{kes.tarikhTerima ? kes.tarikhTerima.split(',')[0] : "-"}</td>
-                {/* Menggunakan stail teks standard yang sama seperti ruangan lain */}
                 <td className="td-date">{kes.tempohAkhir || "-"}</td>
                 <td><PriorityBadge keutamaan={kes.keutamaan} /></td>
                 <td style={{ textAlign: "center" }}>
@@ -179,8 +176,8 @@ function ViewDetail({ kes, onKembali, onTeruskan }) {
             ["No. Rujukan", kes.id],
             ["Tarikh Arahan", kes.tarikhArahan],
             ["Didaftarkan Oleh", kes.didaftarOleh],
-            ["Peranan Penghantar", kes.perananPenghantar],
             ["Kategori", kes.kategori],
+            ["Tempoh Akhir", kes.tempohAkhir || "-"],
             ["Keutamaan", null],
           ].map(([key, val]) => (
             <div key={key} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -232,17 +229,15 @@ function ViewDetail({ kes, onKembali, onTeruskan }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 24px" }}>
             {[
               ["Tajuk Kes", kes.tajuk],
-              ["No. Rujukan Auto", kes.id],
-              ["Tarikh Diterima", kes.tarikhTerima],
+              ["No. Rujukan", kes.id],
               ["Kategori Aduan", kes.kategori],
-              ["Pemohon / Pengadu", kes.pemohon],
               ["Kaedah Penerimaan", "Sistem e-Urus PDK"],
             ].map(([key, val]) => (
               <div key={key}>
                 <div style={{ fontSize: 9.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.6px", color: "var(--text-soft)", marginBottom: 3 }}>{key}</div>
                 <div style={{
                   fontSize: 12.5,
-                  fontFamily: key === "No. Rujukan Auto" ? "'IBM Plex Mono', monospace" : undefined,
+                  fontFamily: key === "No. Rujukan" ? "'IBM Plex Mono', monospace" : undefined,
                   color: "var(--navy-mid)",
                 }}>{val}</div>
               </div>
@@ -303,7 +298,7 @@ function ViewDetail({ kes, onKembali, onTeruskan }) {
 
           <div style={{
             background: "var(--surface-2)", border: "1px solid var(--border-light)",
-            borderRadius: "var(--radius-md)", padding: "14px 16px",
+            borderRadius: "var(--radius-md)", padding: "14px 16px", marginBottom: 20
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               <span style={{
@@ -314,6 +309,29 @@ function ViewDetail({ kes, onKembali, onTeruskan }) {
             </div>
             <p style={{ fontSize: 12, color: "var(--text-mid)", lineHeight: 1.65 }}>{kes.aiSummary}</p>
           </div>
+
+          {/* 📌 Penambahan Blok "Nota Tambahan" di bawah Rumusan AI */}
+          <div style={{
+            fontSize: 9.5, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase",
+            color: "var(--text-muted)", margin: "20px 0 10px", display: "flex", alignItems: "center", gap: 8,
+          }}>
+            Nota Tambahan
+            <span style={{ flex: 1, height: 1, background: "var(--border-light)", display: "block" }} />
+          </div>
+
+          <div style={{
+            background: "var(--surface-2)", border: "1px solid var(--border-light)",
+            borderRadius: "var(--radius-md)", padding: "14px 16px", minHeight: "60px",
+            display: "flex", flexDirection: "column", justifyContent: "center"
+          }}>
+            {kes.notaKj ? (
+              <p style={{ fontSize: 12, color: "var(--text-mid)", lineHeight: 1.65 }}>{kes.notaKj}</p>
+            ) : (
+              // Dibiarkan kosong/box kosong tanpa teks mengikut keperluan jika tiada nota
+              null
+            )}
+          </div>
+
         </div>
       </div>
 
