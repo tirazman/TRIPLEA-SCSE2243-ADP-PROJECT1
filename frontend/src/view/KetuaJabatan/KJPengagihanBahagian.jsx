@@ -173,7 +173,7 @@ export default function KJPengagihanBahagian() {
       <Navbar
         title="Pengagihan kepada Bahagian"
         breadcrumbItems={["e-Urus PDK", "Ketua Jabatan", "Pengagihan kepada Bahagian"]}
-        userName="Zulkifli Hasan"
+        userName="Hj. Rashdan bin Ismail"
         userRole="Ketua Jabatan"
       />
 

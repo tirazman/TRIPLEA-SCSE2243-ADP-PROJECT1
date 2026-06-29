@@ -5,8 +5,8 @@ const menungguCount = initialDocuments.filter((d) => d.status === "menunggu").le
 
 const menuItems = [
   {
-    label: "Penerimaan Laporan",
-    path: "/ketua-jabatan/penerimaan-laporan",
+    label: "Laporan Dihantar",
+    path: "/ketua-jabatan/laporan-dihantar",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -27,8 +27,8 @@ const menuItems = [
     ),
   },
   {
-    label: "Laporan Dihantar",
-    path: "/ketua-jabatan/laporan-dihantar",
+    label: "Penerimaan Laporan",
+    path: "/ketua-jabatan/penerimaan-laporan",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
         <line x1="22" y1="2" x2="11" y2="13" />

@@ -1,0 +1,60 @@
+export const kjCaseList = [
+  {
+    ref: "PDK-2026-0512",
+    title: "Kerosakan Jambatan Kg. Sungai Kecil",
+    subtitle: "Aduan infrastruktur awam — Jalan Persekutuan A3",
+    date: "06 Jun 2026",
+    priority: "Tinggi",
+    status: "Menunggu Semakan",
+  },
+  {
+    ref: "PDK-2026-0498",
+    title: "Banjir Kilat — Jalan Dato' Abdul Rahman",
+    subtitle: "Aduan bencana awam — kawasan bandar",
+    date: "05 Jun 2026",
+    priority: "Tinggi",
+    status: "Menunggu Semakan",
+  },
+  {
+    ref: "PDK-2026-0491",
+    title: "Kerosakan Lampu Jalan — Taman Kluang Baru",
+    subtitle: "Aduan utiliti awam — pencahayaan jalan",
+    date: "04 Jun 2026",
+    priority: "Sederhana",
+    status: "Menunggu Semakan",
+  },
+  {
+    ref: "PDK-2026-0484",
+    title: "Longsor Tanah — Km 14 Jalan Buloh Kasap",
+    subtitle: "Aduan bahaya jalan raya — tanah runtuh",
+    date: "03 Jun 2026",
+    priority: "Tinggi",
+    status: "Menunggu Semakan",
+  },
+  {
+    ref: "PDK-2026-0477",
+    title: "Paip Bocor Utama — Jalan Sri Kluang",
+    subtitle: "Aduan utiliti awam — bekalan air terjejas",
+    date: "02 Jun 2026",
+    priority: "Sederhana",
+    status: "Menunggu Semakan",
+  },
+];
+
+export const kjActiveCase = {
+  ref: "PDK-2026-0512",
+  title: "Aduan Kerosakan Jambatan Kg. Sungai Kecil — Jalan Persekutuan A3",
+  description: "Aduan diterima daripada orang awam berkenaan kerosakan struktur jambatan di Kg. Sungai Kecil yang berpotensi menjejaskan keselamatan pengguna jalan raya. Kes ini telah didaftarkan dan dikemukakan oleh Pembantu Tadbir (Persuratan) untuk tindakan lanjut.",
+  date: "06 Jun 2026",
+  registeredBy: "Norhayati bt. Aziz",
+  role: "Pembantu Tadbir",
+  priority: "Tinggi",
+  status: "Menunggu Tindakan",
+  time: "09:42 PG",
+  category: "Infrastruktur Awam",
+  complainant: "Ahmad Fauzi bin Sulaiman",
+  method: "Sistem e-Urus PDK",
+  attachmentName: "Aduan_PDK-2026-0512_Imbasan.pdf",
+  attachmentMeta: "Diimbas & dimuat naik oleh Norhayati bt. Aziz • 06 Jun 2026",
+  aiSummary: "Aduan melibatkan kerosakan struktur jambatan di Kg. Sungai Kecil yang berpotensi menjejaskan keselamatan awam. Terdapat laporan retak pada tiang penyangga dan papan jambatan yang telah usang. Pemohon menyatakan kejadian hampir terjatuh telah berlaku pada 04 Jun 2026. Kes ini memerlukan penilaian fizikal segera oleh pegawai berkenaan dan anggaran kos pembaikan infrastruktur."
+};

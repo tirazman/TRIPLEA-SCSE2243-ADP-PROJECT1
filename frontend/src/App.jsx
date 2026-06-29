@@ -3,11 +3,12 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./view/Auth/Login";
 
 import PTDashboard from "./view/PembantuTadbir/PTDashboard";
+import PTPenerimaanLaporan from "./view/PembantuTadbir/PTPenerimaanLaporan";
 
 import KJDashboard from "./view/KetuaJabatan/KJDashboard";
-import KJPenerimaanLaporan from "./view/KetuaJabatan/KJPenerimaanLaporan";
-import KJPengagihanBahagian from "./view/KetuaJabatan/KJPengagihanBahagian";
 import KJLaporanDihantar from "./view/KetuaJabatan/KJLaporanDihantar";
+import KJPengagihanBahagian from "./view/KetuaJabatan/KJPengagihanBahagian";
+import KJPenerimaanLaporan from "./view/KetuaJabatan/KJPenerimaanLaporan";
 
 import KBDashboard from "./view/KetuaBahagian/KBDashboard";
 import KBArahanKetuaJabatan from "./view/KetuaBahagian/KBArahanKetuaJabatan";
@@ -33,13 +34,17 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
 
-        <Route path="/pembantu-tadbir" element={<PTDashboard />} />
+        {/* Pembantu Tadbir */}
+        <Route path="/pembantu-tadbir" element={<PTDashboard />}>
+          <Route index element={<Navigate to="penerimaan" replace />} />
+          <Route path="penerimaan" element={<PTPenerimaanLaporan />} />
+        </Route>
 
         {/* Ketua Jabatan */}
         <Route path="/ketua-jabatan" element={<KJDashboard />}>
           <Route index element={<Navigate to="pengagihan-bahagian" replace />} />
-          <Route path="penerimaan-laporan" element={<KJPenerimaanLaporan />} />
           <Route path="pengagihan-bahagian" element={<KJPengagihanBahagian />} />
+          <Route path="penerimaan-laporan" element={<KJPenerimaanLaporan />} />
           <Route path="laporan-dihantar" element={<KJLaporanDihantar />} />
         </Route>
 
