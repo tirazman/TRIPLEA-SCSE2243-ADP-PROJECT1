@@ -174,36 +174,36 @@ export const deptStatusLabel = {
 export const pplLaporanData = [
   {
     ref: "PDK/KLG/2026/1024-L",
-    aduan: "Struktur Jambatan Retak di Chamek",
-    title: "Laporan Cadangan Naiktaraf Jambatan Kampung Melayu Nyior, Chamek",
-    subtitle: "Chamek • Infrastruktur & Awam",
+    aduan: "Banjir Kilat — Jalan Dato' Abdul Rahman",
+    title: "Laporan Cadangan Naiktaraf Kawasan Perumahan Banjir",
+    subtitle: "Kluang Bandar • Infrastruktur & Awam",
     status: "Pending",
-    arrived: "28 Jun 2026",
-    deadline: "05 Jul 2026",
+    arrived: "04 Jun 2026",
+    deadline: "07 Jul 2026",
     timestamp: "2026-06-28 08:30:00",
     notes: "",
   },
   {
     ref: "PDK/KLG/2026/0912-L",
-    aduan: "Rumah Usang dan Bumbung Bocor Warga Emas",
-    title: "Laporan Siasatan Bantuan Baik Pulih Rumah Kasih Johor — Mukim Paloh",
-    subtitle: "Mukim Paloh • Kebajikan & Sosial",
+    aduan: "Kerosakan Lampu Isyarat Simpang Renggam",
+    title: "Laporan Siasatan Bantuan Baik Pulih Lampu Isyarat",
+    subtitle: "Simpang Renggam • Kemudahan Awam",
     status: "In Progress",
-    arrived: "27 Jun 2026",
+    arrived: "01 Jun 2026",
     deadline: "04 Jul 2026",
     timestamp: "2026-06-27 11:15:00",
-    notes: "Dalam proses pengesahan dokumen pemilikan tanah pemohon.",
+    notes: "",
   },
   {
     ref: "PDK/KLG/2026/0889-L",
-    aduan: "Limpahan Air Sungai Mengkibol-Kedai Pekan Kluang",
-    title: "Laporan Penilaian Kerosakan Infrastruktur Pasca-Banjir Dun Mahkota",
-    subtitle: "Pekan Kluang • Alam Sekitar & Banjir",
+    aduan: "Aduan Jalan Berlubang Kampung Melayu",
+    title: "Laporan Penilaian Kerosakan Infrastruktur",
+    subtitle: "Kluang Lama • Penyelenggaraan Jalan",
     status: "Completed",
     arrived: "25 Jun 2026",
     deadline: "02 Jul 2026",
     timestamp: "2026-06-25 16:45:00",
-    notes: "Telah dihantar ke Unit Pembangunan Fail Daerah untuk tindakan peruntukan.",
+    notes: "",
   },
   {
     ref: "PDK/KLG/2026/0934-L",
@@ -228,6 +228,8 @@ export const pplLaporanData = [
     notes: "Kerja-kerja siasatan lapangan sedang dijalankan.",
   },
 ];
+
+
 
 export const kbPengagihanStatusData = [
   {
