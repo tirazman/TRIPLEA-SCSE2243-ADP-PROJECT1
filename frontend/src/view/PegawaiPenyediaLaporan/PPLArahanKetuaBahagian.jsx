@@ -4,25 +4,37 @@ import Navbar from "../../components/common/navbar";
 import { assignedTasks } from "../../data/pplData";
 import "../../styles/pages/PPLTugasanDetail.css";
 
-/* ─── Badge status tugasan ─── */
-function TaskStatusBadge({ status }) {
-  const map = {
-    "Menunggu Laporan": { cls: "badge-pending", label: "Menunggu Laporan" },
-    "Melebihi Tempoh": { cls: "badge-overdue", label: "Melebihi Tempoh" },
-  };
-  const conf = map[status] || map["Menunggu Laporan"];
+/* ─── Badge keutamaan (sama style dgn KB) ─── */
+function PriorityBadge({ keutamaan }) {
+  if (keutamaan === "Tinggi") {
+    return (
+      <span style={{
+        background: "var(--red-bg)", color: "var(--red)", border: "1px solid var(--red-border)",
+        fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: "var(--radius-sm)",
+      }}>Tinggi</span>
+    );
+  }
+  if (keutamaan === "Sederhana") {
+    return (
+      <span style={{
+        background: "var(--amber-bg)", color: "var(--amber)", border: "1px solid var(--amber-border)",
+        fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: "var(--radius-sm)",
+      }}>Sederhana</span>
+    );
+  }
   return (
-    <span className={`status-badge ${conf.cls}`}>
-      <span className="badge-dot"></span>
-      {conf.label}
-    </span>
+    <span style={{
+      background: "var(--surface-2)", color: "var(--text-soft)", border: "1px solid var(--border)",
+      fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: "var(--radius-sm)",
+    }}>Rendah</span>
   );
 }
 
 /* ─── List view: Senarai Tugasan Saya ─── */
 function TaskListView({ tasks, onOpenDetail }) {
-  const menungguCount = tasks.filter((t) => t.status === "Menunggu Laporan").length;
-  const lewatCount = tasks.filter((t) => t.status === "Melebihi Tempoh").length;
+  const tinggiCount   = tasks.filter((t) => t.keutamaan === "Tinggi").length;
+  const sederhanaCount = tasks.filter((t) => t.keutamaan === "Sederhana").length;
+  const rendahCount   = tasks.filter((t) => t.keutamaan === "Rendah").length;
 
   return (
     <div>
@@ -35,20 +47,8 @@ function TaskListView({ tasks, onOpenDetail }) {
         </div>
       </div>
 
+      {/* Summary cards — count by keutamaan */}
       <div className="summary-strip">
-        <div className="summary-card">
-          <div className="summary-icon" style={{ borderColor: "var(--amber-border)", background: "var(--amber-bg)" }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          </div>
-          <div>
-            <div className="summary-val">{menungguCount}</div>
-            <div className="summary-label">Menunggu Laporan</div>
-          </div>
-        </div>
-
         <div className="summary-card">
           <div className="summary-icon" style={{ borderColor: "var(--red-border)", background: "var(--red-bg)" }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
@@ -58,8 +58,21 @@ function TaskListView({ tasks, onOpenDetail }) {
             </svg>
           </div>
           <div>
-            <div className="summary-val">{lewatCount}</div>
-            <div className="summary-label">Melebihi Tempoh</div>
+            <div className="summary-val">{tinggiCount}</div>
+            <div className="summary-label">Keutamaan Tinggi</div>
+          </div>
+        </div>
+
+        <div className="summary-card">
+          <div className="summary-icon" style={{ borderColor: "var(--amber-border)", background: "var(--amber-bg)" }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div>
+            <div className="summary-val">{sederhanaCount}</div>
+            <div className="summary-label">Keutamaan Sederhana</div>
           </div>
         </div>
 
@@ -71,8 +84,8 @@ function TaskListView({ tasks, onOpenDetail }) {
             </svg>
           </div>
           <div>
-            <div className="summary-val">{tasks.length}</div>
-            <div className="summary-label">Jumlah Tugasan</div>
+            <div className="summary-val">{rendahCount}</div>
+            <div className="summary-label">Keutamaan Rendah</div>
           </div>
         </div>
       </div>
@@ -85,14 +98,22 @@ function TaskListView({ tasks, onOpenDetail }) {
           </div>
         </div>
 
-        <table className="data-table">
+        <table className="data-table" style={{ tableLayout: "auto" }}>
+          <colgroup>
+            <col style={{ width: "150px" }} />
+            <col />
+            <col style={{ width: "115px" }} />
+            <col style={{ width: "115px" }} />
+            <col style={{ width: "100px" }} />
+            <col style={{ width: "130px" }} />
+          </colgroup>
           <thead>
             <tr>
               <th>No. Rujukan</th>
               <th>Tajuk Aduan</th>
               <th>Tarikh Terima</th>
               <th>Tempoh Akhir</th>
-              <th>Status Tugasan</th>
+              <th>Keutamaan</th>
               <th>Tindakan</th>
             </tr>
           </thead>
@@ -105,10 +126,8 @@ function TaskListView({ tasks, onOpenDetail }) {
                   <div className="td-tajuk-sub">Arahan: {t.kbInstruction.slice(0, 60)}...</div>
                 </td>
                 <td className="td-date">{t.dateGiven}</td>
-                <td className={`td-tempoh ${t.status === "Melebihi Tempoh" ? "tempoh-overdue" : "tempoh-normal"}`}>
-                  {t.deadline}
-                </td>
-                <td><TaskStatusBadge status={t.status} /></td>
+                <td className="td-date">{t.deadline}</td>
+                <td><PriorityBadge keutamaan={t.keutamaan} /></td>
                 <td>
                   <button className="btn-tindakan" onClick={() => onOpenDetail(t)}>
                     <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -205,9 +224,7 @@ function TaskDetailView({ task, onBack, onContinueToUpload }) {
             <div className="deadline-banner-date">{task.deadline}</div>
           </div>
         </div>
-        <span className="deadline-days-pill">
-          {task.status === "Melebihi Tempoh" ? "Tempoh tamat" : "5 hari lagi"}
-        </span>
+        <PriorityBadge keutamaan={task.keutamaan} />
       </div>
 
       <div className="detail-actions-row">

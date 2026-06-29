@@ -25,7 +25,9 @@ function PriorityBadge({ keutamaan }) {
 // ─── View A: Senarai ──────────────────────────────────────────────────────────
 
 function ViewSenarai({ onSemak }) {
-  const tinggiCount = arahanKes.filter((k) => k.keutamaan === "Tinggi").length;
+  const tinggiCount    = arahanKes.filter((k) => k.keutamaan === "Tinggi").length;
+  const sederhanaCount = arahanKes.filter((k) => k.keutamaan === "Sederhana").length;
+  const rendahCount    = arahanKes.filter((k) => k.keutamaan === "Rendah").length;
 
   return (
     <>
@@ -47,6 +49,48 @@ function ViewSenarai({ onSemak }) {
             display: "inline-block", animation: "blink 2s ease-in-out infinite",
           }} />
           {arahanKes.length} Kes Menunggu Tindakan
+        </div>
+      </div>
+
+      <div className="summary-strip">
+        <div className="summary-card">
+          <div className="summary-icon" style={{ borderColor: "var(--red-border)", background: "var(--red-bg)" }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+          <div>
+            <div className="summary-val">{tinggiCount}</div>
+            <div className="summary-label">Keutamaan Tinggi</div>
+          </div>
+        </div>
+
+        <div className="summary-card">
+          <div className="summary-icon" style={{ borderColor: "var(--amber-border)", background: "var(--amber-bg)" }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div>
+            <div className="summary-val">{sederhanaCount}</div>
+            <div className="summary-label">Keutamaan Sederhana</div>
+          </div>
+        </div>
+
+        <div className="summary-card">
+          <div className="summary-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--navy-mid)" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+          </div>
+          <div>
+            <div className="summary-val">{rendahCount}</div>
+            <div className="summary-label">Keutamaan Rendah</div>
+          </div>
         </div>
       </div>
 
