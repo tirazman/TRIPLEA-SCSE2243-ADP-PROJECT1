@@ -14,6 +14,7 @@ import KBArahanKetuaJabatan from "./view/KetuaBahagian/KBArahanKetuaJabatan";
 import KBPengagihanTugasan from "./view/KetuaBahagian/KBPengagihanTugasan";
 import KBLaporanDihantar from "./view/KetuaBahagian/KBLaporanDihantar";
 import KBStatusKerja from "./view/KetuaBahagian/KBStatusKerja";
+import KBHantarLaporan from "./view/KetuaBahagian/KBHantarLaporan";
 
 import PPLDashboard from "./view/PegawaiPenyediaLaporan/PPLDashboard";
 import PPLStatusKerja from "./view/PegawaiPenyediaLaporan/PPLStatusKerja";
@@ -49,6 +50,7 @@ function App() {
           <Route path="pengagihan-tugasan" element={<KBPengagihanTugasan />} />
           <Route path="laporan-dihantar" element={<KBLaporanDihantar />} />
           <Route path="status-kerja" element={<KBStatusKerja />} />
+          <Route path="arahan-ketua-jabatan/:caseId/hantar-laporan" element={<KBHantarLaporan />} />
         </Route>
 
         {/* Pegawai Penyedia Laporan */}
