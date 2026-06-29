@@ -470,13 +470,13 @@ export default function KBPengagihanTugasan() {
           </div>
 
           <div className="table-scroll-wrapper">
-            <table className="data-table">
+            <table className="data-table" style={{ tableLayout: "auto" }}>
               <colgroup>
-                <col style={{ width: "150px" }} />
+                <col style={{ width: "155px" }} />
                 <col />
-                <col style={{ width: "160px" }} />
-                <col style={{ width: "105px" }} />
-                <col style={{ width: "105px" }} />
+                <col style={{ width: "155px" }} />
+                <col style={{ width: "100px" }} />
+                <col style={{ width: "100px" }} />
                 <col style={{ width: "120px" }} />
                 <col style={{ width: "70px" }} />
               </colgroup>
