@@ -230,3 +230,49 @@ export const pplLaporanData = [
     notes: "Kerja-kerja siasatan lapangan sedang dijalankan.",
   },
 ];
+
+//KETUA BAHAGIAN PUNYA DATA
+// Data status pengagihan tugasan untuk Ketua Bahagian (KB).
+// KB track sama ada dia dah agihkan tugasan laporan kepada PPL untuk setiap Kes.
+export const kbPengagihanStatusData = [
+  {
+    ref: "PDK/KLG/2026/0912",
+    title: "Pemantauan Kualiti Jalan Raya Pasca Hujan — Kluang Utara",
+    subtitle: "Kluang Utara • Infrastruktur & Awam",
+    arrived: "18 Jun 2026",
+    status: "Sudah Diagihkan",
+    assignedTo: "En. Shahril Bin Hamid",
+    timestamp: "2026-06-19 09:30:00",
+    notes: "Tugasan telah diagihkan kepada PPL untuk laporan teknikal dan laporan komuniti.",
+  },
+  {
+    ref: "PDK/KLG/2026/0905",
+    title: "Aduan Bau Busuk Longkang Induk — Taman Universiti",
+    subtitle: "Taman Universiti • Alam Sekitar",
+    arrived: "15 Jun 2026",
+    status: "Sedang Diagihkan",
+    assignedTo: "Pn. Norlia Binti Daud",
+    timestamp: "2026-06-16 10:00:00",
+    notes: "Sebahagian tugasan telah diagihkan. Laporan alam sekitar masih belum ditetapkan pegawai.",
+  },
+  {
+    ref: "PDK/KLG/2026/0889",
+    title: "Kerosakan Jambatan Kecil Sungai Bekok",
+    subtitle: "Bekok • Infrastruktur & Awam",
+    arrived: "05 Jun 2026",
+    status: "Belum Diagihkan",
+    assignedTo: "",
+    timestamp: "2026-06-05 08:00:00",
+    notes: "",
+  },
+  {
+    ref: "PDK/KLG/2026/0921",
+    title: "Permohonan Penambahan Lampu Jalan — Felda Sungai Sibol",
+    subtitle: "Felda Sungai Sibol • Kemudahan Awam",
+    arrived: "23 Jun 2026",
+    status: "Belum Diagihkan",
+    assignedTo: "",
+    timestamp: "2026-06-23 08:00:00",
+    notes: "",
+  },
+];
