@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import Navbar from "../../components/common/navbar";
 import { PTSubmissionList } from "../../data/PTSubmissionList";
-import "../../styles/pages/PTPendaftaranFail.css"; // Kekalkan atau tukar jika fail CSS di-rename nanti
+import "../../styles/pages/PTPendaftaranFail.css"; 
 
 /* ─── System Overlay Modal ─── */
 function SystemModal({ show, isSuccess, title, desc }) {
@@ -48,19 +48,49 @@ function ToastAlert({ toast }) {
   );
 }
 
-// 📌 1. Nama komponen ditukar kepada PTPendaftaranFail
+/* ─── UC105: Record Detail Modal (Search & Retrieve Case Records) ─── */
+function RecordDetailModal({ record, onClose }) {
+  if (!record) return null;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ textAlign: "left" }}>
+        <h3>{record.title}</h3>
+        <p><strong>No. Rujukan:</strong> {record.ref}</p>
+        <p><strong>Tarikh Muat Naik:</strong> {record.date}</p>
+        <p><strong>Tempoh Akhir:</strong> {record.dueDate}</p>
+        <p><strong>Status:</strong> {record.status}</p>
+        <div style={{ marginTop: "16px" }}>
+          {/* Replace with actual stored file URL when backend is integrated */}
+          <a
+            href={record.fileUrl || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-outline"
+          >
+            Lihat Dokumen PDF
+          </a>
+        </div>
+        <button className="btn-primary" style={{ marginTop: "16px" }} onClick={onClose}>
+          Tutup
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function PTPendaftaranFail() {
   const [view, setView] = useState("list");
   // Tukar status lalai "Direkodkan"/"Disemak" kepada "Dalam Tindakan"
-  const [submissions, setSubmissions] = useState(() => 
+  const [submissions, setSubmissions] = useState(() =>
     PTSubmissionList.map(item => ({
       ...item,
       status: item.status === "Direkodkan" || item.status === "Disemak" ? "Dalam Tindakan" : item.status
     }))
   );
-  
+
   // Form States
-  const [formData, setFormData] = useState({ title: "", notes: "", dueDate: "" });  const [file, setFile] = useState(null);
+  const [formData, setFormData] = useState({ title: "", notes: "", dueDate: "" });
+  const [file, setFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -69,6 +99,10 @@ export default function PTPendaftaranFail() {
   const [toastState, setToastState] = useState({ show: false, title: "", message: "", type: "success" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessSubmit, setIsSuccessSubmit] = useState(false);
+
+  // --- UC105: Search & Retrieve Case Records States ---
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
   // --- Utility Functions ---
   const showToast = (title, message, type = "success") => {
@@ -111,7 +145,7 @@ export default function PTPendaftaranFail() {
     }
 
     showModal("Mengesahkan Dokumen...", "Sistem sedang mengimbas fail dokumen anda.");
-    
+
     // Simulate API Verification (1.5s)
     setTimeout(() => {
       hideModal();
@@ -155,7 +189,6 @@ export default function PTPendaftaranFail() {
 
       showModal("Berjaya!", `Dokumen berjaya didaftarkan. \nNo. Rujukan: ${siriRujukan}`, true);
 
-      // Simulate Success Modal Read Time (2.5s)
       setTimeout(() => {
         hideModal();
         setIsSubmitting(false);
@@ -166,14 +199,35 @@ export default function PTPendaftaranFail() {
           title: formData.title.trim(),
           dueDate: formData.dueDate,
           date: today,
-          status: "Dalam Tindakan"
+          status: "Dalam Tindakan",
+          fileUrl: null 
         };
-        
+
         setSubmissions(prev => [newRecord, ...prev]);
         showToast("Penyerahan Berjaya", `Dokumen berjaya dikemukakan. No. Rujukan: ${siriRujukan}`, "success");
         handleBackToList();
       }, 2500);
     }, 2000);
+  };
+
+  // --- UC105: Search & Retrieve Case Records ---
+  // Normal Flow 2-3: user enters reference number / criteria -> system queries centralized data
+  const filteredSubmissions = submissions.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      item.ref.toLowerCase().includes(query) ||
+      item.title.toLowerCase().includes(query)
+    );
+  });
+
+  // Normal Flow 4: system displays case details and allows viewing the PDF document
+  const handleViewRecord = (item) => {
+    setSelectedRecord(item);
+  };
+
+  const handleCloseRecordView = () => {
+    setSelectedRecord(null);
   };
 
   const tomorrow = new Date();
@@ -182,7 +236,7 @@ export default function PTPendaftaranFail() {
 
   return (
     <>
-      <Navbar 
+      <Navbar
         title="Pendaftaran Fail"
         breadcrumbItems={["e-Urus PDK", "Subsistem 1", "Pendaftaran Fail"]}
         userName="Pn. Aisyah Binti Ahmad"
@@ -211,14 +265,21 @@ export default function PTPendaftaranFail() {
                   <div className="table-panel-title">Pengurusan Rekod Berpusat</div>
                   <div className="table-panel-sub">Semua data disegerak masa nyata dengan Pangkalan Data</div>
                 </div>
+                {/* UC105 Normal Flow 1-2: record search interface, user enters reference number/criteria */}
                 <div className="search-input-wrap">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                   </svg>
-                  <input type="text" className="search-input" placeholder="Cari No. Rujukan / Tajuk..." />
+                  <input
+                    type="text"
+                    className="search-input"
+                    placeholder="Cari No. Rujukan / Tajuk..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
               </div>
-              
+
               <table className="data-table">
                 <thead>
                   <tr>
@@ -231,23 +292,37 @@ export default function PTPendaftaranFail() {
                   </tr>
                 </thead>
                 <tbody>
-                  {submissions.map((item) => (
-                    <tr key={item.ref}>
-                      <td className="td-ref">{item.ref}</td>
-                      <td>
-                        <div className="td-tajuk">{item.title}</div>
+                  {filteredSubmissions.length === 0 ? (
+                    // UC105 Alternative Flow A1: No Record Found
+                    <tr>
+                      <td colSpan={6} className="td-empty" style={{ textAlign: "center", padding: "24px", color: "var(--text-muted, #888)" }}>
+                        Tiada rekod ditemui bagi "{searchQuery}". Sila semak semula nombor rujukan atau kriteria carian anda.
                       </td>
-                      <td className="td-date">{item.date}</td>
-                      <td className="td-date">{item.dueDate}</td>
-                      <td>
-                        <span className={`status-badge ${item.status === 'Dalam Tindakan' ? 'badge-warning' : 'badge-success'}`}>
-                          <div className="badge-dot"></div>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td><button className="btn-outline">Lihat</button></td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredSubmissions.map((item) => (
+                      <tr key={item.ref}>
+                        <td className="td-ref">{item.ref}</td>
+                        <td>
+                          <div className="td-tajuk">{item.title}</div>
+                        </td>
+                        <td className="td-date">{item.date}</td>
+                        <td className="td-date">{item.dueDate}</td>
+                        <td>
+                          <span className={`status-badge ${item.status === 'Dalam Tindakan' ? 'badge-warning' : 'badge-success'}`}>
+                            <div className="badge-dot"></div>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td>
+                          {/* UC105 Normal Flow 4: display case details / allow viewing PDF */}
+                          <button className="btn-outline" onClick={() => handleViewRecord(item)}>
+                            Lihat
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -290,10 +365,10 @@ export default function PTPendaftaranFail() {
                   <form onSubmit={handleSubmitForm}>
                     <div className="form-group">
                       <label htmlFor="docTitle">Tajuk Dokumen / Aduan <span className="required">*</span></label>
-                      <input 
-                        type="text" 
-                        id="docTitle" 
-                        className="form-control" 
+                      <input
+                        type="text"
+                        id="docTitle"
+                        className="form-control"
                         placeholder="Cth: Laporan Kerosakan Jalan Raya Kluang"
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -302,23 +377,23 @@ export default function PTPendaftaranFail() {
                     </div>
                     <div className="form-group">
                       <label htmlFor="dueDate">Tempoh Akhir <span className="required">*</span></label>
-                      <input 
-                        type="date" 
-                        id="dueDate" 
-                        className="form-control" 
+                      <input
+                        type="date"
+                        id="dueDate"
+                        className="form-control"
                         value={formData.dueDate}
                         onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                         disabled={isSubmitting}
-                        min={minDate} 
+                        min={minDate}
                         required
                       />
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label htmlFor="docNotes">Catatan Tambahan</label>
-                      <textarea 
-                        id="docNotes" 
-                        className="form-control" 
-                        rows="4" 
+                      <textarea
+                        id="docNotes"
+                        className="form-control"
+                        rows="4"
                         placeholder="Sila masukkan maklumat ringkas atau nota rujukan..."
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -345,9 +420,9 @@ export default function PTPendaftaranFail() {
                   </div>
                 </div>
                 <div className="panel-body">
-                  
+
                   {!file && (
-                    <div 
+                    <div
                       className={`upload-zone ${dragOver ? "drag-over" : ""}`}
                       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                       onDragLeave={() => setDragOver(false)}
@@ -385,9 +460,9 @@ export default function PTPendaftaranFail() {
                   )}
 
                   <div className="submit-action-area">
-                    <button 
-                      className="btn-submit" 
-                      onClick={handleSubmitForm} 
+                    <button
+                      className="btn-submit"
+                      onClick={handleSubmitForm}
                       disabled={isSubmitting || isSuccessSubmit || !file}
                       style={isSuccessSubmit ? { background: 'var(--green)' } : {}}
                     >
@@ -408,7 +483,7 @@ export default function PTPendaftaranFail() {
                       )}
                     </button>
                   </div>
-                  
+
                 </div>
               </div>
             </div>
@@ -416,12 +491,15 @@ export default function PTPendaftaranFail() {
         )}
       </div>
 
-      <SystemModal 
-        show={modalState.show} 
-        isSuccess={modalState.isSuccess} 
-        title={modalState.title} 
-        desc={modalState.desc} 
+      <SystemModal
+        show={modalState.show}
+        isSuccess={modalState.isSuccess}
+        title={modalState.title}
+        desc={modalState.desc}
       />
+
+      {/* UC105: Search & Retrieve Case Records - detail/PDF view modal */}
+      <RecordDetailModal record={selectedRecord} onClose={handleCloseRecordView} />
 
       <ToastAlert toast={toastState} />
     </>
