@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS DocumentDepartment (
     FOREIGN KEY (refNo) REFERENCES Document(refNo),
     deptID VARCHAR(30) NOT NULL,
     FOREIGN KEY (deptID) REFERENCES Department(deptID),
+    assignedOfficer VARCHAR(30) NULL,
+    FOREIGN KEY (assignedOfficer) REFERENCES User(userID),
     assignedAt DATE NOT NULL,
     status ENUM('Belum Mula', 'Sedang Diproses', 'Dihantar') NOT NULL DEFAULT 'Belum Mula',
     UNIQUE KEY unique_doc_dept (refNo, deptID)
