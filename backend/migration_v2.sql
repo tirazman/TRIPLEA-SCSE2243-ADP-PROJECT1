@@ -102,8 +102,8 @@ VALUES ('PDK/KLG/2026/0003', 'Kebocoran Paip Utama — Jalan Sultanah Zainab',
 'Kebocoran paip utama mengakibatkan gangguan bekalan air. Koordinasi dengan pihak berkuasa air diperlukan.',
 'Dalam Tindakan');
 
-INSERT INTO DocumentDepartment (refNo, deptID, assignedAt, status) VALUES
-('PDK/KLG/2026/0003', 'D001', '2026-06-09', 'Sedang Diproses');
+INSERT INTO DocumentDepartment (refNo, deptID, assignedOfficer, assignedAt, status) VALUES
+('PDK/KLG/2026/0003', 'D001', 'U004', '2026-06-09', 'Sedang Diproses');
 
 INSERT INTO Report (reportID, refNo, deptID, officerID, submittedAt, reportDetails, kbFeedback, status)
 VALUES ('LPR-2026-0001', 'PDK/KLG/2026/0003', 'D001', 'U004', '2026-06-09', NULL, NULL, 'Sedang Disediakan');
@@ -117,8 +117,8 @@ VALUES ('PDK/KLG/2026/0004', 'Pemantauan Kualiti Jalan Raya Pasca Hujan — Klua
 'Pemantauan rutin mengesan retak permukaan dan longkang tersumbat di kawasan Kluang Utara.',
 'Dalam Tindakan');
 
-INSERT INTO DocumentDepartment (refNo, deptID, assignedAt, status) VALUES
-('PDK/KLG/2026/0004', 'D001', '2026-06-18', 'Dihantar');
+INSERT INTO DocumentDepartment (refNo, deptID, assignedOfficer, assignedAt, status) VALUES
+('PDK/KLG/2026/0004', 'D001', 'U004', '2026-06-18', 'Dihantar');
 
 INSERT INTO Report (reportID, refNo, deptID, officerID, submittedAt, reportDetails, kbFeedback, status)
 VALUES ('LPR-2026-0002', 'PDK/KLG/2026/0004', 'D001', 'U004', '2026-06-20',
@@ -134,10 +134,10 @@ VALUES ('PDK/KLG/2026/0005', 'Kerosakan Jambatan Kecil Sungai Bekok',
 'Kerosakan jambatan berisiko tinggi kemalangan jika tidak ditangani segera.',
 'Selesai');
 
-INSERT INTO DocumentDepartment (refNo, deptID, assignedAt, status) VALUES
-('PDK/KLG/2026/0005', 'D001', '2026-06-05', 'Dihantar'),
-('PDK/KLG/2026/0005', 'D002', '2026-06-05', 'Dihantar'),
-('PDK/KLG/2026/0005', 'D003', '2026-06-05', 'Dihantar');
+INSERT INTO DocumentDepartment (refNo, deptID, assignedOfficer, assignedAt, status) VALUES
+('PDK/KLG/2026/0005', 'D001', 'U004', '2026-06-05', 'Dihantar'),
+('PDK/KLG/2026/0005', 'D002', 'U006', '2026-06-05', 'Dihantar'),
+('PDK/KLG/2026/0005', 'D003', 'U007', '2026-06-05', 'Dihantar');
 
 INSERT INTO Report (reportID, refNo, deptID, officerID, submittedAt, reportDetails, kbFeedback, status) VALUES
 ('LPR-2026-0003', 'PDK/KLG/2026/0005', 'D001', 'U004', '2026-06-05', 'Lokasi Sungai Bekok KM 7, jambatan retak, perlu pembaikan segera.', 'Diterima.', 'Diluluskan'),
