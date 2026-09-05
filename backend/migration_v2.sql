@@ -1,66 +1,39 @@
 -- ═══════════════════════════════════════════════════════════
--- schema.sql — e-Urus PDK
--- Fresh-install version: run this on an EMPTY MySQL server to
--- create the full database from scratch (structure + seed data).
---
--- If you already have an eUrusDB with the old structure, do NOT
--- run this — use migration_v2.sql instead to upgrade in place.
+-- migration_v2.sql
+-- Run this ONCE on your existing eUrusDB to bring it up to date.
+-- Safe to run on a database that already has the original 5 dummy
+-- users (U001-U005) — this script only adds/restructures tables,
+-- it does not drop your existing User/Department/Document/Report
+-- data (except the unused InformationRequest table).
 -- ═══════════════════════════════════════════════════════════
 
-CREATE DATABASE IF NOT EXISTS eUrusDB;
 USE eUrusDB;
 
--- Table for User
-CREATE TABLE IF NOT EXISTS User (
-    userID VARCHAR(30) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    role ENUM('KetuaJabatan', 'KetuaBahagian', 'PegawaiPenyediaLaporan', 'PegawaiPenyelarasBahagian', 'PembantuTadbir') NOT NULL,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+-- ═══ 0. Drop InformationRequest — confirmed unused in any route/controller/frontend ═══
+DROP TABLE IF EXISTS InformationRequest;
 
-INSERT INTO User (userID, name, role, username, password, email) VALUES
-('U001', 'Zulkifli Hasan', 'PegawaiPenyelarasBahagian', 'zulkiflihasan', 'password', 'zulkiflihasan@pdk.my'),
-('U002', 'Hj. Rashdan bin Ismail', 'KetuaJabatan', 'rashdanismail', 'password', 'rashdanismail@pdk.my'),
-('U003', 'Aisyah binti Ahmad', 'PembantuTadbir', 'aisyahahmad', 'password', 'aisyahahmad@pdk.my'),
-('U004', 'Amirul Haziq Abdullah', 'PegawaiPenyediaLaporan', 'amirulhaziq', 'password', 'amirulhaziq@pdk.my'),
-('U005', 'Mohd. Faizal bin Mohd. Yusof', 'KetuaBahagian', 'faizalyusof', 'password', 'faizalyusof@pdk.my'),
-('U006', 'Nur Syafiqah Ismail', 'PegawaiPenyediaLaporan', 'syafiqahismail', 'password', 'syafiqahismail@pdk.my'),
-('U007', 'Daniel Lim Wei Jian', 'PegawaiPenyediaLaporan', 'daniellim', 'password', 'daniellim@pdk.my');
-
--- Table for Department
-CREATE TABLE IF NOT EXISTS Department (
-    deptID VARCHAR(30) PRIMARY KEY,
-    deptName VARCHAR(50) NOT NULL UNIQUE
-) ENGINE=InnoDB;
-
+-- ═══ 1. Seed 3 Bahagian ═══
 INSERT INTO Department (deptID, deptName) VALUES
 ('D001', 'Bahagian Fizikal'),
 ('D002', 'Bahagian Masyarakat'),
 ('D003', 'Bahagian Pentadbiran');
 
--- Table for Document — central record shared by ALL roles (PT creates it,
--- KJ/KB/PPL/PPB all read & update the SAME row as the case progresses)
-CREATE TABLE IF NOT EXISTS Document (
-    refNo VARCHAR(30) PRIMARY KEY,
-    title VARCHAR(150) NOT NULL,
-    description TEXT NULL,
-    category VARCHAR(50) NULL,
-    location VARCHAR(100) NULL,
-    complainantName VARCHAR(100) NULL,
-    priority ENUM('Tinggi', 'Sederhana', 'Rendah') NOT NULL DEFAULT 'Sederhana',
-    submittedBy VARCHAR(30),
-    FOREIGN KEY (submittedBy) REFERENCES User(userID),
-    submissionDate DATE NOT NULL,
-    deadline DATE NULL,
-    aiSummary TEXT NULL,
-    status ENUM('Didaftar', 'Menunggu Semakan KJ', 'Diagihkan', 'Dalam Tindakan', 'Selesai') NOT NULL DEFAULT 'Didaftar',
-    attachmentPath VARCHAR(255) NULL
-) ENGINE=InnoDB;
+-- ═══ 2. Extend Document — tambah field, buang deptID (jadi many-to-many) ═══
+ALTER TABLE Document
+    DROP FOREIGN KEY document_ibfk_2,
+    DROP COLUMN deptID,
+    ADD COLUMN title VARCHAR(150) NOT NULL AFTER refNo,
+    ADD COLUMN description TEXT NULL AFTER title,
+    ADD COLUMN category VARCHAR(50) NULL AFTER description,
+    ADD COLUMN location VARCHAR(100) NULL AFTER category,
+    ADD COLUMN complainantName VARCHAR(100) NULL AFTER location,
+    ADD COLUMN priority ENUM('Tinggi', 'Sederhana', 'Rendah') NOT NULL DEFAULT 'Sederhana' AFTER complainantName,
+    ADD COLUMN deadline DATE NULL AFTER submissionDate,
+    ADD COLUMN aiSummary TEXT NULL AFTER deadline,
+    ADD COLUMN attachmentPath VARCHAR(255) NULL,
+    MODIFY COLUMN status ENUM('Didaftar', 'Menunggu Semakan KJ', 'Diagihkan', 'Dalam Tindakan', 'Selesai') NOT NULL DEFAULT 'Didaftar';
 
--- Table for DocumentDepartment — a Document can be assigned to MULTIPLE
--- departments at once (many-to-many), each tracked separately
+-- ═══ 3. Table baru: DocumentDepartment (many-to-many Document <-> Department) ═══
 CREATE TABLE IF NOT EXISTS DocumentDepartment (
     id INT AUTO_INCREMENT PRIMARY KEY,
     refNo VARCHAR(30) NOT NULL,
@@ -72,34 +45,28 @@ CREATE TABLE IF NOT EXISTS DocumentDepartment (
     UNIQUE KEY unique_doc_dept (refNo, deptID)
 ) ENGINE=InnoDB;
 
--- Table for Report — PPL's submitted report for one department on one Document
-CREATE TABLE IF NOT EXISTS Report (
-    reportID VARCHAR(30) PRIMARY KEY,
-    refNo VARCHAR(30),
-    FOREIGN KEY (refNo) REFERENCES Document(refNo),
-    deptID VARCHAR(30),
-    FOREIGN KEY (deptID) REFERENCES Department(deptID),
-    officerID VARCHAR(30) NULL,
-    FOREIGN KEY (officerID) REFERENCES User(userID),
-    submittedAt DATE NOT NULL,
-    reportDetails TEXT NULL,
-    kbFeedback TEXT NULL,
-    status ENUM('Sedang Disediakan', 'Sedang Disemak', 'Diluluskan', 'Perlu Pembetulan') NOT NULL DEFAULT 'Sedang Disediakan'
-) ENGINE=InnoDB;
+-- ═══ 4. Extend Report — tambah officer, butiran laporan, feedback KB ═══
+ALTER TABLE Report
+    ADD COLUMN officerID VARCHAR(30) NULL AFTER deptID,
+    ADD CONSTRAINT fk_report_officer FOREIGN KEY (officerID) REFERENCES User(userID),
+    ADD COLUMN reportDetails TEXT NULL,
+    ADD COLUMN kbFeedback TEXT NULL,
+    ADD COLUMN status ENUM('Sedang Disediakan', 'Sedang Disemak', 'Diluluskan', 'Perlu Pembetulan') NOT NULL DEFAULT 'Sedang Disediakan';
 
--- Table for CompileReport — PPB's consolidated report covering ALL
--- departments' reports for one Document
-CREATE TABLE IF NOT EXISTS CompileReport (
-    compileID VARCHAR(30) PRIMARY KEY,
-    refNo VARCHAR(30) NOT NULL,
-    FOREIGN KEY (refNo) REFERENCES Document(refNo),
-    finalizedBy VARCHAR(30),
-    FOREIGN KEY (finalizedBy) REFERENCES User(userID),
-    compileAt DATE NOT NULL,
-    finalSummary TEXT NULL
-) ENGINE=InnoDB;
+-- ═══ 5. Fix CompileReport — link ke Document (bukan 1 Report tunggal) ═══
+ALTER TABLE CompileReport
+    DROP FOREIGN KEY compilereport_ibfk_1,
+    DROP COLUMN reportID,
+    ADD COLUMN refNo VARCHAR(30) NOT NULL AFTER compileID,
+    ADD CONSTRAINT fk_compile_document FOREIGN KEY (refNo) REFERENCES Document(refNo),
+    ADD COLUMN finalSummary TEXT NULL;
 
--- ═══ Seed data: 5 example cases covering each stage of the workflow ═══
+-- ═══ 6. Tambah 2 PPL baru (supaya setiap bahagian ada pegawai sendiri) ═══
+INSERT INTO User (userID, name, role, username, password, email) VALUES
+('U006', 'Nur Syafiqah Ismail', 'PegawaiPenyediaLaporan', 'syafiqahismail', 'password', 'syafiqahismail@pdk.my'),
+('U007', 'Daniel Lim Wei Jian', 'PegawaiPenyediaLaporan', 'daniellim', 'password', 'daniellim@pdk.my');
+
+-- ═══ 7. Seed data: 5 contoh case merentasi semua stage flow ═══
 
 -- CASE 1: Menunggu Semakan KJ
 INSERT INTO Document (refNo, title, description, category, location, complainantName, priority, submittedBy, submissionDate, deadline, aiSummary, status)
