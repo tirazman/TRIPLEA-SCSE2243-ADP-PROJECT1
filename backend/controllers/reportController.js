@@ -24,16 +24,32 @@ exports.createReport = async (req, res) => {
     }
 
     try {
-        const reportID = await generateReportId();
-        const submittedAt = new Date().toISOString().split('T')[0];
-
-        await db.execute(
-            `INSERT INTO Report (reportID, refNo, deptID, officerID, submittedAt, reportDetails, status)
-             VALUES (?, ?, ?, ?, ?, ?, 'Sedang Disemak')`,
-            [reportID, refNo, deptID, officerID, submittedAt, reportDetails || null]
+        // Semak dulu kalau report untuk refNo+deptID ni dah wujud
+        const [existing] = await db.execute(
+            `SELECT reportID FROM Report WHERE refNo = ? AND deptID = ?`,
+            [refNo, deptID]
         );
 
-        // Bila laporan dihantar, kemaskini status DocumentDepartment jadi 'Dihantar'
+        let reportID;
+        const submittedAt = new Date().toISOString().split('T')[0];
+
+        if (existing.length > 0) {
+            // Dah wujud — update row sedia ada (bukan insert baru)
+            reportID = existing[0].reportID;
+            await db.execute(
+                `UPDATE Report SET officerID = ?, submittedAt = ?, reportDetails = ?, status = 'Sedang Disemak' WHERE reportID = ?`,
+                [officerID, submittedAt, reportDetails || null, reportID]
+            );
+        } else {
+            // Belum wujud — insert baru
+            reportID = await generateReportId();
+            await db.execute(
+                `INSERT INTO Report (reportID, refNo, deptID, officerID, submittedAt, reportDetails, status)
+                 VALUES (?, ?, ?, ?, ?, ?, 'Sedang Disemak')`,
+                [reportID, refNo, deptID, officerID, submittedAt, reportDetails || null]
+            );
+        }
+
         await db.execute(
             `UPDATE DocumentDepartment SET status = 'Dihantar' WHERE refNo = ? AND deptID = ?`,
             [refNo, deptID]
