@@ -1,7 +1,39 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../../components/common/navbar";
-import { pplLaporanData } from "../../data/statusKerjaData";
+import Pagination from "../../components/common/Pagination";
 import "../../styles/pages/StatusKerja.css";
+
+// ─── Helper: tukar data dari /api/document-departments jadi shape yang UI ni expect ───
+function mapAssignmentToLaporan(item) {
+  const today = new Date();
+  const deadlineDate = item.deadline ? new Date(item.deadline) : null;
+  const isPastDeadline = deadlineDate && deadlineDate < today;
+
+  let status;
+  if (item.reportStatus === "Diluluskan") {
+    status = "Completed";
+  } else if (isPastDeadline) {
+    status = "Overdue";
+  } else if (item.reportID || item.assignmentStatus === "Sedang Diproses") {
+    status = "In Progress";
+  } else {
+    status = "Pending";
+  }
+
+  const formatDate = (d) => (d ? new Date(d).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }) : "-");
+
+  return {
+    id: item.id,
+    ref: item.refNo,
+    aduan: item.title,
+    subtitle: `${item.location || ""}${item.location && item.category ? " • " : ""}${item.category || ""}`,
+    title: item.title,
+    arrived: formatDate(item.assignedAt),
+    deadline: formatDate(item.deadline),
+    status,
+    notes: item.reportDetails || "",
+  };
+}
 
 /* ─── Badge status untuk setiap laporan ─── */
 function LaporanStatusBadge({ status }) {
@@ -111,12 +143,30 @@ function UpdateModal({ report, onClose, onSave }) {
     MAIN PAGE — PPL Status Kerja
    ════════════════════════════════════════════ */
 export default function PPLStatusKerja() {
-  const [laporanDatabase, setLaporanDatabase] = useState(pplLaporanData);
+  const [laporanDatabase, setLaporanDatabase] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeReport, setActiveReport] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // State baharu untuk mesej notifikasi pop-up
   const [toast, setToast] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  // TODO: ganti hardcode "U004" dengan userID sebenar dari session/auth
+  // bila login system dah wire ke localStorage/context
+  const currentOfficerID = JSON.parse(localStorage.getItem("user") || "{}").userID || "U004";
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/document-departments?officerID=${currentOfficerID}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setLaporanDatabase(data.map(mapAssignmentToLaporan));
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Gagal ambil data laporan:", err);
+        setLoading(false);
+      });
+  }, [currentOfficerID]);
 
   const pending   = laporanDatabase.filter(r => r.status === "Pending").length;
   const progress  = laporanDatabase.filter(r => r.status === "In Progress").length;
@@ -129,21 +179,47 @@ export default function PPLStatusKerja() {
     return r.ref.toLowerCase().includes(q) || r.aduan.toLowerCase().includes(q) || r.title.toLowerCase().includes(q);
   });
 
+  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+  const paginated = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // reset ke page 1 bila carian atau data berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, laporanDatabase.length]);
+
   const showToast = (message) => {
     setToast(message);
-    // Pop-up akan hilang secara automatik selepas 3.5 saat
     setTimeout(() => {
       setToast(null);
     }, 3500);
   };
 
-  const handleSave = (updated) => {
-    setLaporanDatabase(prev => prev.map(r => r.ref === updated.ref ? updated : r));
-    
-    // Pemicu pop-up dipanggil di sini selepas simpanan berjaya
-    const statusLabels = { Pending: "Pending", "In Progress": "Dalam Proses", Completed: "Selesai" };
-    const label = statusLabels[updated.status] || updated.status;
-    showToast(`Status laporan ${updated.ref} berjaya dikemas kini kepada "${label}".`);
+  const handleSave = async (updated) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/document-departments/${updated.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: updated.status, notes: updated.notes }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        showToast(`Gagal kemas kini: ${err.message || "ralat tidak diketahui"}`);
+        return;
+      }
+
+      setLaporanDatabase(prev => prev.map(r => r.ref === updated.ref ? updated : r));
+
+      const statusLabels = { Pending: "Pending", "In Progress": "Dalam Proses", Completed: "Selesai" };
+      const label = statusLabels[updated.status] || updated.status;
+      showToast(`Status laporan ${updated.ref} berjaya dikemas kini kepada "${label}".`);
+    } catch (err) {
+      console.error("Ralat sambungan:", err);
+      showToast("Tidak dapat menghubungi pelayan");
+    }
   };
 
   return (
@@ -226,7 +302,9 @@ export default function PPLStatusKerja() {
           <div className="table-panel-header">
             <div>
               <div className="table-panel-title">Senarai Laporan Aktif</div>
-              <div className="table-panel-sub">Menunjukkan {filtered.length} laporan dalam sistem</div>
+              <div className="table-panel-sub">
+                {loading ? "Memuatkan..." : `Menunjukkan ${filtered.length} laporan dalam sistem`}
+              </div>
             </div>
             <div className="search-input-wrap search-input-sk-wrap">
               <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -256,7 +334,7 @@ export default function PPLStatusKerja() {
                 </tr>
             </thead>
             <tbody>
-                {filtered.map((report) => (
+                {paginated.map((report) => (
                 <tr key={report.ref}>
                 <td className="td-ref">{report.ref}</td>
                 <td>
@@ -300,7 +378,7 @@ export default function PPLStatusKerja() {
             </tr>
             ))}
 
-            {filtered.length === 0 && (
+            {!loading && filtered.length === 0 && (
               <tr>
                 <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-soft)', padding: '28px' }}>
                   Tiada rekod laporan ditemui bagi carian "{searchQuery}".
@@ -309,6 +387,12 @@ export default function PPLStatusKerja() {
             )}
           </tbody>
         </table>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
         </div>
 
       </div>

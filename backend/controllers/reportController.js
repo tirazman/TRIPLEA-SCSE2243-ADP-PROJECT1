@@ -92,3 +92,31 @@ exports.getReports = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+exports.updateReport = async (req, res) => {
+    const { reportID } = req.params;
+    const { reportDetails, status, kbFeedback } = req.body;
+
+    const fields = [];
+    const values = [];
+    if (reportDetails !== undefined) { fields.push("reportDetails = ?"); values.push(reportDetails); }
+    if (status) { fields.push("status = ?"); values.push(status); }
+    if (kbFeedback !== undefined) { fields.push("kbFeedback = ?"); values.push(kbFeedback); }
+
+    if (fields.length === 0) {
+        return res.status(400).json({ message: "Tiada field untuk dikemaskini" });
+    }
+
+    try {
+        values.push(reportID);
+        const [result] = await db.execute(
+            `UPDATE Report SET ${fields.join(", ")} WHERE reportID = ?`,
+            values
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Report tidak dijumpai" });
+        }
+        res.status(200).json({ message: "Laporan berjaya difinalize" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};

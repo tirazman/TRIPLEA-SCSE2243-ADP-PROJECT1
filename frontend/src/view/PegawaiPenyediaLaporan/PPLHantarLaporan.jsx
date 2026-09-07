@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Navbar from "../../components/common/navbar";
-import { assignedTasks } from "../../data/pplData";
 import "../../styles/pages/PPLTugasanDetail.css";
 
 // --- UTILITY FUNCTIONS ---
@@ -38,6 +37,8 @@ const Toast = ({ show, title, msg, onClose }) => (
     <button className="toast-close" onClick={onClose}>&#x2715;</button>
   </div>
 );
+const currentOfficerID = () => JSON.parse(localStorage.getItem("user") || "{}").userID || "U004";
+
 export default function PPLHantarLaporan() {
   const { taskId } = useParams();
   const navigate = useNavigate();
@@ -46,9 +47,26 @@ export default function PPLHantarLaporan() {
     const [dragOver, setDragOver] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState({ show: false, title: "", msg: "" });
-  
+    const [task, setTask] = useState(null);
+    const [loadingTask, setLoadingTask] = useState(true);
+
     const fileInputRef = useRef(null);
-  
+
+    // Ambil butiran tugasan (DocumentDepartment row) berdasarkan taskId dalam URL
+    useEffect(() => {
+      fetch(`http://localhost:5000/api/document-departments?officerID=${currentOfficerID()}`)
+        .then((res) => res.json())
+        .then((rows) => {
+          const found = rows.find((r) => String(r.id) === String(taskId));
+          setTask(found || null);
+          setLoadingTask(false);
+        })
+        .catch((err) => {
+          console.error("Gagal ambil butiran tugasan:", err);
+          setLoadingTask(false);
+        });
+    }, [taskId]);
+
     // Auto-hide toast
     useEffect(() => {
       if (toast.show) {
@@ -60,7 +78,17 @@ export default function PPLHantarLaporan() {
     const showToast = (title, msg) => {
       setToast({ show: true, title, msg });
     };
-  const task = assignedTasks.find((t) => t.id === taskId);
+
+  if (loadingTask) {
+    return (
+      <>
+        <Navbar title="Hantar Laporan" breadcrumbItems={["e-Urus PDK", "Pegawai Penyedia Laporan", "Hantar Laporan"]} />
+        <div className="content">
+          <p>Memuatkan...</p>
+        </div>
+      </>
+    );
+  }
 
   if (!task) {
     return (
@@ -109,9 +137,28 @@ export default function PPLHantarLaporan() {
     const imgCount = fileQueue.filter((f) => f.type === "img").length;
     const allValid = fileQueue.length > 0 && validCount === fileQueue.length;
   
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
       setIsSubmitting(true);
-      setTimeout(() => {
+      try {
+        const fileNames = fileQueue.map((f) => f.name).join(", ");
+        const res = await fetch(`http://localhost:5000/api/reports`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            refNo: task.refNo,
+            deptID: task.deptID,
+            officerID: currentOfficerID(),
+            reportDetails: `Fail disertakan: ${fileNames}`,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          setIsSubmitting(false);
+          showToast("Gagal Menghantar", err.message || "Ralat tidak diketahui");
+          return;
+        }
+
         setIsSubmitting(false);
         showToast(
           "Laporan Lengkap Berjaya Dihantar",
@@ -122,7 +169,11 @@ export default function PPLHantarLaporan() {
           setFileQueue([]); // clear queue
           navigate("/pegawai-penyedia/arahan");
         }, 2000);
-      }, 1800);
+      } catch (err) {
+        console.error("Ralat sambungan:", err);
+        setIsSubmitting(false);
+        showToast("Ralat Sambungan", "Tidak dapat menghubungi pelayan");
+      }
     };
   
     // --- VALIDATION RENDERER ---
@@ -226,7 +277,7 @@ export default function PPLHantarLaporan() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="#1e4d8c" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
               </div>
               <div>
-                <div className="upload-stat-num">{task.caseRef}</div>
+                <div className="upload-stat-num">{task.refNo}</div>
                 <div className="upload-stat-label">No. Rujukan Kes</div>
               </div>
             </div>

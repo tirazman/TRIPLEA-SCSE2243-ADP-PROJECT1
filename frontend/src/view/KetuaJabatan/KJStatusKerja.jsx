@@ -1,19 +1,118 @@
 import { useMemo, useState, useEffect } from "react";
 import Navbar from "../../components/common/navbar";
-import {
-  kjCaseRegistry,
-  kjCaseDeptStatus,
-  kjWorkStatusCases,
-  kjConsolidatedReports,
-  kjPipelineLabel,
-  kjPipelineSteps,
-  getKjPipelineStepIndex,
-  deptDisplay,
-  deptStatusLabel,
-} from "../../data/statusKerjaData";
+import Pagination from "../../components/common/Pagination";
 import "../../styles/pages/PenerimaanLaporan.css";
 import "../../styles/pages/PengagihanBahagian.css";
 import "../../styles/pages/StatusKerja.css";
+
+const ITEMS_PER_PAGE = 6;
+
+// ─── Config paparan statik (bukan data — kekal sama macam asal) ───
+const kjPipelineLabel = {
+  "Dalam Proses Bahagian": "Dalam Proses Bahagian",
+  "Menunggu Koordinasi": "Menunggu Koordinasi PPB",
+  "Menunggu Semakan Akhir": "Menunggu Semakan Akhir KJ",
+  Selesai: "Selesai",
+  "Melebihi Tempoh": "Melebihi Tempoh",
+};
+const kjPipelineSteps = [
+  "Diagihkan ke Bahagian",
+  "Dalam Proses Bahagian",
+  "Menunggu Koordinasi PPB",
+  "Menunggu Semakan Akhir KJ",
+  "Selesai",
+];
+function getKjPipelineStepIndex(stage) {
+  const map = {
+    "Dalam Proses Bahagian": 1,
+    "Melebihi Tempoh": 1,
+    "Menunggu Koordinasi": 2,
+    "Menunggu Semakan Akhir": 3,
+    Selesai: 4,
+  };
+  return map[stage] ?? 0;
+}
+const deptDisplay = {
+  "Bahagian Fizikal": { short: "BF" },
+  "Bahagian Masyarakat": { short: "BM" },
+  "Bahagian Pentadbiran": { short: "BP" },
+};
+const deptStatusLabel = {
+  Pending: "Belum Mula",
+  "In Progress": "Sedang Diproses",
+  Completed: "Selesai Dihantar",
+  Overdue: "Melebihi Tempoh",
+};
+
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }) : "-");
+
+function mapDeptEntryStatus(row) {
+  const deadlinePassed = row.deadline && new Date(row.deadline) < new Date();
+  if (row.reportStatus === "Diluluskan" || row.assignmentStatus === "Dihantar") return "Completed";
+  if (deadlinePassed) return "Overdue";
+  if (row.reportID || row.assignmentStatus === "Sedang Diproses") return "In Progress";
+  return "Pending";
+}
+
+// ─── Fetch semua Document yang dah diagihkan KJ, gabung dengan DocumentDepartment untuk pipeline stage & breakdown bahagian ───
+function useKJStatusData() {
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`http://localhost:5000/api/documents`).then((r) => r.json()),
+      fetch(`http://localhost:5000/api/document-departments`).then((r) => r.json()),
+    ])
+      .then(([documents, assignments]) => {
+        const relevantDocs = documents.filter((d) =>
+          ["Diagihkan", "Dalam Tindakan", "Menunggu Semakan Akhir", "Selesai"].includes(d.status)
+        );
+
+        const mapped = relevantDocs.map((doc) => {
+          const depts = assignments.filter((a) => a.refNo === doc.refNo);
+          const deadlinePassed = doc.deadline && new Date(doc.deadline) < new Date();
+          const allDihantar = depts.length > 0 && depts.every((d) => d.assignmentStatus === "Dihantar");
+
+          let pipelineStage;
+          if (doc.status === "Selesai") pipelineStage = "Selesai";
+          else if (doc.status === "Menunggu Semakan Akhir") pipelineStage = "Menunggu Semakan Akhir";
+          else if (deadlinePassed) pipelineStage = "Melebihi Tempoh";
+          else if (allDihantar) pipelineStage = "Menunggu Koordinasi";
+          else pipelineStage = "Dalam Proses Bahagian";
+
+          return {
+            ref: doc.refNo,
+            title: doc.title,
+            subtitle: `${doc.category || ""}${doc.category && doc.location ? " — " : ""}${doc.location || ""}`,
+            category: doc.category,
+            assignedDate: formatDate(depts[0]?.assignedAt || doc.submissionDate),
+            deadline: formatDate(doc.deadline),
+            assignedDepts: depts.map((d) => d.deptName),
+            assignNote: null, // tiada dalam backend
+            pipelineStage,
+            deptStatuses: depts.map((d) => ({
+              dept: d.deptName,
+              status: mapDeptEntryStatus(d),
+              staff: d.officerName || "Belum ditugaskan",
+              date: formatDate(d.submittedAt || d.assignedAt),
+              docTitle: d.reportID ? `Laporan ${d.deptName}` : "Belum ada laporan disediakan",
+              note: d.reportDetails || "",
+            })),
+          };
+        });
+
+        setCases(mapped);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Gagal ambil status kerja KJ:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  return { cases, loading };
+}
 
 function PipelineStageBadge({ stage }) {
   const map = {
@@ -219,12 +318,30 @@ function ConsolidatedReportBlock({ report, readOnly }) {
 }
 
 function CaseDetailModal({ caseData, onClose, onApprove, isSubmitting }) {
+  const [consolidatedReport, setConsolidatedReport] = useState(null);
+
+  useEffect(() => {
+    if (caseData && caseData.pipelineStage === "Selesai") {
+      fetch(`http://localhost:5000/api/compile-reports/${encodeURIComponent(caseData.ref)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data) { setConsolidatedReport(null); return; }
+          setConsolidatedReport({
+            submittedBy: data.finalizedByName || "-",
+            submittedDate: formatDate(data.compileAt),
+            note: data.finalSummary || "",
+            file: { name: `Laporan_Konsolidasi_${caseData.ref.replace(/\//g, "_")}.pdf`, size: "-", type: "PDF" },
+          });
+        })
+        .catch(() => setConsolidatedReport(null));
+    } else {
+      setConsolidatedReport(null);
+    }
+  }, [caseData]);
+
   if (!caseData) return null;
 
-  const { ref: caseRef } = caseData;
-  const kes = kjCaseRegistry[caseRef];
-  const deptStatuses = kjCaseDeptStatus[caseRef] || [];
-  const consolidatedReport = kjConsolidatedReports[caseRef];
+  const { ref: caseRef, deptStatuses } = caseData;
   const stepIndex = getKjPipelineStepIndex(caseData.pipelineStage);
 
   const canApprove =
@@ -243,8 +360,8 @@ function CaseDetailModal({ caseData, onClose, onApprove, isSubmitting }) {
               <span className="case-modal-id">{caseRef}</span>
               <span className="case-modal-hop-count">{deptStatuses.length} bahagian terlibat</span>
             </div>
-            <div className="case-modal-title">{kes?.label}</div>
-            <span className="case-modal-category">{kes?.category}</span>
+            <div className="case-modal-title">{caseData.title}</div>
+            <span className="case-modal-category">{caseData.category}</span>
           </div>
           <button type="button" className="case-modal-close-btn" onClick={onClose}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -506,7 +623,7 @@ function ButiranKBModal({ data, onClose }) {
    MAIN COMPONENT
    ════════════════════════════════════════════ */
 export default function KJStatusKerja() {
-  const [cases, setCases] = useState(kjWorkStatusCases);
+  const { cases, loading } = useKJStatusData();
   const [activeTab, setActiveTab] = useState("tugasan"); // "tugasan" atau "kb"
   const [activeCaseRef, setActiveCaseRef] = useState(null);
   const [activeKBRow, setActiveKBRow] = useState(null);
@@ -514,6 +631,8 @@ export default function KJStatusKerja() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   const [showReminder, setShowReminder] = useState(false); // State kawalan untuk peringatan merah pastel
+  const [currentPageTugasan, setCurrentPageTugasan] = useState(1);
+  const [currentPageKB, setCurrentPageKB] = useState(1);
 
   const activeCase = cases.find((c) => c.ref === activeCaseRef) || null;
 
@@ -523,11 +642,11 @@ export default function KJStatusKerja() {
   };
 
   const handleApproveFinalReview = (ref) => {
+    // NOTA: simulasi paparan sahaja — tak wired ke backend (case sebenar
+    // takkan pernah capai stage "Menunggu Semakan Akhir" ikut flow semasa,
+    // sebab PPB compile terus set status ke "Selesai").
     setIsSubmitting(true);
     setTimeout(() => {
-      setCases((prev) =>
-        prev.map((c) => (c.ref === ref ? { ...c, pipelineStage: "Selesai" } : c))
-      );
       setIsSubmitting(false);
       setActiveCaseRef(null);
       showToast(`Semakan akhir untuk ${ref} diluluskan. Kes ditandakan selesai.`);
@@ -556,8 +675,7 @@ export default function KJStatusKerja() {
   const kbStatusList = useMemo(() => {
     const list = [];
     cases.forEach((c) => {
-      const depts = kjCaseDeptStatus[c.ref] || [];
-      depts.forEach((d, idx) => {
+      (c.deptStatuses || []).forEach((d, idx) => {
         list.push({
           id: `${c.ref}-${idx}`,
           caseRef: c.ref,
@@ -610,6 +728,27 @@ export default function KJStatusKerja() {
         k.staff.toLowerCase().includes(q)
     );
   }, [kbStatusList, searchQuery]);
+
+  // Reset ke muka surat 1 bila carian atau data berubah
+  useEffect(() => {
+    setCurrentPageTugasan(1);
+  }, [filteredCases.length, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPageKB(1);
+  }, [filteredKB.length, searchQuery]);
+
+  const totalPagesTugasan = Math.max(1, Math.ceil(filteredCases.length / ITEMS_PER_PAGE));
+  const pagedCases = filteredCases.slice(
+    (currentPageTugasan - 1) * ITEMS_PER_PAGE,
+    currentPageTugasan * ITEMS_PER_PAGE
+  );
+
+  const totalPagesKB = Math.max(1, Math.ceil(filteredKB.length / ITEMS_PER_PAGE));
+  const pagedKB = filteredKB.slice(
+    (currentPageKB - 1) * ITEMS_PER_PAGE,
+    currentPageKB * ITEMS_PER_PAGE
+  );
 
   const handleTabSwitch = (tab) => {
     setActiveTab(tab);
@@ -719,7 +858,7 @@ export default function KJStatusKerja() {
               <div className="table-panel-header">
                 <div>
                   <div className="table-panel-title">Status Kes Diagihkan</div>
-                  <div className="table-panel-sub">Menunjukkan {filteredCases.length} kes yang memerlukan pemantauan Ketua Jabatan</div>
+                  <div className="table-panel-sub">{loading ? "Memuatkan..." : `Menunjukkan ${filteredCases.length} kes yang memerlukan pemantauan Ketua Jabatan`}</div>
                 </div>
                 <div className="search-input-wrap search-input-sk-wrap">
                   <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -756,7 +895,7 @@ export default function KJStatusKerja() {
                         </td>
                       </tr>
                     ) : (
-                      filteredCases.map((c) => {
+                      pagedCases.map((c) => {
                         const needsReview = c.pipelineStage === "Menunggu Semakan Akhir";
                         const actionLabel = needsReview ? "Semak" : "Butiran";
                         const btnClass = needsReview ? "btn-tindakan" : "btn-secondary";
@@ -803,6 +942,12 @@ export default function KJStatusKerja() {
                   </tbody>
                 </table>
               </div>
+
+              <Pagination
+                currentPage={currentPageTugasan}
+                totalPages={totalPagesTugasan}
+                onPageChange={setCurrentPageTugasan}
+              />
             </div>
           </>
         )}
@@ -866,7 +1011,7 @@ export default function KJStatusKerja() {
               <div className="table-panel-header">
                 <div>
                   <div className="table-panel-title">Status Kemajuan Setiap Bahagian</div>
-                  <div className="table-panel-sub">Menunjukkan {filteredKB.length} tugasan aktif di bawah tindakan Ketua Bahagian</div>
+                  <div className="table-panel-sub">{loading ? "Memuatkan..." : `Menunjukkan ${filteredKB.length} tugasan aktif di bawah tindakan Ketua Bahagian`}</div>
                 </div>
                 <div className="search-input-wrap">
                   <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -903,7 +1048,7 @@ export default function KJStatusKerja() {
                         </td>
                       </tr>
                     ) : (
-                      filteredKB.map((k) => (
+                      pagedKB.map((k) => (
                         <tr key={k.id}>
                           <td className="td-ref" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "11.5px" }}>{k.caseRef}</td>
                           <td style={{ fontWeight: 600, color: "var(--navy)", fontSize: "12.5px" }}>{k.dept}</td>
@@ -930,6 +1075,12 @@ export default function KJStatusKerja() {
                   </tbody>
                 </table>
               </div>
+
+              <Pagination
+                currentPage={currentPageKB}
+                totalPages={totalPagesKB}
+                onPageChange={setCurrentPageKB}
+              />
             </div>
           </>
         )}

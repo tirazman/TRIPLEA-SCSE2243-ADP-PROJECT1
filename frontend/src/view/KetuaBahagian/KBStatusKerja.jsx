@@ -1,7 +1,79 @@
 import { useState, useEffect } from "react";
 import Navbar from "../../components/common/navbar";
-import { pplLaporanData, kbTugasanList } from "../../data/statusKerjaData";
+import Pagination from "../../components/common/Pagination";
 import "../../styles/pages/StatusKerja.css";
+
+const ITEMS_PER_PAGE = 6;
+
+const DEPT_ID = "D001"; // Page ni scoped untuk Ketua Bahagian - Fizikal (ikut Navbar asal)
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }) : "-");
+
+function deriveTugasanStatus(row) {
+  if (!row.assignedOfficer) return "Belum Diagihkan";
+  if (row.reportStatus === "Diluluskan") return "Selesai";
+  if (row.deadline && new Date(row.deadline) < new Date()) return "Lewat";
+  return "Sudah Diagihkan";
+}
+
+function deriveLaporanStatus(row) {
+  const deadlinePassed = row.deadline && new Date(row.deadline) < new Date();
+  if (row.reportStatus === "Diluluskan") return "Completed";
+  if (deadlinePassed) return "Overdue";
+  if (row.reportID || row.assignmentStatus === "Sedang Diproses") return "In Progress";
+  return "Pending";
+}
+
+function useKBStatusData() {
+  const [kbTugasanList, setKbTugasanList] = useState([]);
+  const [pplLaporanData, setPplLaporanData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/document-departments`)
+      .then((res) => res.json())
+      .then((data) => {
+        const deptRows = data.filter((r) => r.deptID === DEPT_ID);
+
+        setKbTugasanList(
+          deptRows.map((r) => ({
+            id: r.id,
+            caseRef: r.refNo,
+            caseTitle: r.title,
+            officer: r.officerName || "",
+            dateGiven: formatDate(r.assignedAt),
+            deadline: formatDate(r.deadline),
+            instruction: r.instruction || "",
+            priority: r.priority,
+            status: deriveTugasanStatus(r),
+          }))
+        );
+
+        setPplLaporanData(
+          deptRows
+            .filter((r) => r.assignedOfficer) // status PPL cuma untuk yang dah ada pegawai ditugaskan
+            .map((r) => ({
+              ref: r.refNo,
+              aduan: r.title,
+              subtitle: `${r.location || ""}${r.location && r.category ? " • " : ""}${r.category || ""}`,
+              title: r.title,
+              arrived: formatDate(r.assignedAt),
+              deadline: formatDate(r.deadline),
+              status: deriveLaporanStatus(r),
+              notes: r.reportDetails || "",
+              timestamp: r.submittedAt ? formatDate(r.submittedAt) : "-",
+            }))
+        );
+
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Gagal ambil data status kerja KB:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  return { kbTugasanList, pplLaporanData, loading };
+}
 
 /* ─── Badge status tugasan KB ─── */
 function TugasanStatusBadge({ status }) {
@@ -272,6 +344,9 @@ export default function KBStatusKerja() {
   const [activePPL, setActivePPL]         = useState(null);
   const [searchQuery, setSearchQuery]     = useState("");
   const [showToast, setShowToast]         = useState(false);
+  const [currentPageTugasan, setCurrentPageTugasan] = useState(1);
+  const [currentPagePPL, setCurrentPagePPL] = useState(1);
+  const { kbTugasanList, pplLaporanData, loading } = useKBStatusData();
 
   // Tab 1 stats
   const tugasanSudah = kbTugasanList.filter(t => t.status !== "Belum Diagihkan").length;
@@ -311,6 +386,27 @@ export default function KBStatusKerja() {
       r.title.toLowerCase().includes(q)
     );
   });
+
+  // Reset ke muka surat 1 bila carian atau data berubah
+  useEffect(() => {
+    setCurrentPageTugasan(1);
+  }, [filteredTugasan.length, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPagePPL(1);
+  }, [filteredPPL.length, searchQuery]);
+
+  const totalPagesTugasan = Math.max(1, Math.ceil(filteredTugasan.length / ITEMS_PER_PAGE));
+  const pagedTugasan = filteredTugasan.slice(
+    (currentPageTugasan - 1) * ITEMS_PER_PAGE,
+    currentPageTugasan * ITEMS_PER_PAGE
+  );
+
+  const totalPagesPPL = Math.max(1, Math.ceil(filteredPPL.length / ITEMS_PER_PAGE));
+  const pagedPPL = filteredPPL.slice(
+    (currentPagePPL - 1) * ITEMS_PER_PAGE,
+    currentPagePPL * ITEMS_PER_PAGE
+  );
 
   const switchTab = (tab) => { setActiveTab(tab); setSearchQuery(""); };
 
@@ -408,7 +504,7 @@ export default function KBStatusKerja() {
               <div className="table-panel-header">
                 <div>
                   <div className="table-panel-title">Senarai Tugasan Diagihkan</div>
-                  <div className="table-panel-sub">Menunjukkan {filteredTugasan.length} tugasan yang telah diagihkan kepada PPL</div>
+                  <div className="table-panel-sub">{loading ? "Memuatkan..." : `Menunjukkan ${filteredTugasan.length} tugasan yang telah diagihkan kepada PPL`}</div>
                 </div>
                 <div className="search-input-wrap">
                   <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -437,7 +533,7 @@ export default function KBStatusKerja() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTugasan.map(t => (
+                  {pagedTugasan.map(t => (
                     <tr key={t.id}>
                       <td style={{
                         fontFamily: "'IBM Plex Mono', monospace",
@@ -485,6 +581,12 @@ export default function KBStatusKerja() {
                   )}
                 </tbody>
               </table>
+
+              <Pagination
+                currentPage={currentPageTugasan}
+                totalPages={totalPagesTugasan}
+                onPageChange={setCurrentPageTugasan}
+              />
             </div>
           </>
         )}
@@ -548,7 +650,7 @@ export default function KBStatusKerja() {
               <div className="table-panel-header">
                 <div>
                   <div className="table-panel-title">Status Laporan PPL</div>
-                  <div className="table-panel-sub">Menunjukkan {filteredPPL.length} laporan di bawah bahagian anda</div>
+                  <div className="table-panel-sub">{loading ? "Memuatkan..." : `Menunjukkan ${filteredPPL.length} laporan di bawah bahagian anda`}</div>
                 </div>
                 <div className="search-input-wrap">
                   <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -577,7 +679,7 @@ export default function KBStatusKerja() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPPL.map(r => (
+                  {pagedPPL.map(r => (
                     <tr key={r.ref}>
                       <td style={{
                         fontFamily: "'IBM Plex Mono', monospace",
@@ -623,6 +725,12 @@ export default function KBStatusKerja() {
                   )}
                 </tbody>
               </table>
+
+              <Pagination
+                currentPage={currentPagePPL}
+                totalPages={totalPagesPPL}
+                onPageChange={setCurrentPagePPL}
+              />
             </div>
           </>
         )}

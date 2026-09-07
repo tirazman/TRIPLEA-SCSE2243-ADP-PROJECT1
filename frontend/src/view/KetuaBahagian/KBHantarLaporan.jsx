@@ -51,6 +51,23 @@ export default function KBHantarLaporan() {
 
   const fileInputRef = useRef(null);
 
+  const [reportID, setReportID] = useState(null);
+  const [loadingReport, setLoadingReport] = useState(true);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/reports?refNo=${encodeURIComponent(caseId)}`)
+      .then((res) => res.json())
+      .then((rows) => {
+        const match = rows.find((r) => r.deptID === "D001");
+        setReportID(match ? match.reportID : null);
+        setLoadingReport(false);
+      })
+      .catch((err) => {
+        console.error("Gagal ambil laporan PPL:", err);
+        setLoadingReport(false);
+      });
+  }, [caseId]);
+
   // Auto-hide toast
   useEffect(() => {
     if (toast.show) {
@@ -97,20 +114,46 @@ export default function KBHantarLaporan() {
   const imgCount = fileQueue.filter((f) => f.type === "img").length;
   const allValid = fileQueue.length > 0 && validCount === fileQueue.length;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!reportID) {
+      showToast("Ralat", "Laporan PPL untuk kes ini belum dijumpai — pastikan PPL sudah menghantar laporan lapangan dahulu.");
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      const fileNames = fileQueue.map((f) => f.name).join(", ");
+      const res = await fetch(`http://localhost:5000/api/reports/${reportID}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reportDetails: `Laporan akhir bahagian (disemak & disahkan KB). Fail disertakan: ${fileNames}`,
+          status: "Diluluskan",
+          kbFeedback: "Laporan disemak dan disahkan oleh Ketua Bahagian. Dihantar untuk makluman Ketua Jabatan.",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        setIsSubmitting(false);
+        showToast("Gagal Menghantar", err.message || "Ralat tidak diketahui");
+        return;
+      }
+
       setIsSubmitting(false);
       showToast(
         "Laporan Lengkap Berjaya Dihantar",
         "Laporan dan bukti telah diserahkan kepada pentadbiran sistem e-Urus PDK. Notifikasi telah dihantar secara automatik."
       );
-      // Automatically return to Senarai after 2 seconds
       setTimeout(() => {
-        setFileQueue([]); // clear queue
+        setFileQueue([]);
         navigate("/ketua-bahagian/arahan-ketua-jabatan");
       }, 2000);
-    }, 1800);
+    } catch (err) {
+      console.error("Ralat sambungan:", err);
+      setIsSubmitting(false);
+      showToast("Ralat Sambungan", "Tidak dapat menghubungi pelayan");
+    }
   };
 
   // --- VALIDATION RENDERER ---

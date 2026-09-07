@@ -1,13 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../../components/common/navbar";
-import {
-  caseRegistry,
-  caseDeptStatus,
-  workStatusCases,
-  deptDisplay,
-  deptStatusLabel,
-} from "../../data/statusKerjaData";
+import Pagination from "../../components/common/Pagination";
 import "../../styles/pages/StatusKerja.css";
+
+// ─── Helper: format tarikh ───
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }) : "-");
+
+// ─── Helper: tukar status DocumentDepartment/deadline jadi status UI (Pending/In Progress/Completed/Overdue) ───
+function mapDeptStatus(row) {
+  const today = new Date();
+  const deadlinePassed = row.deadline && new Date(row.deadline) < today;
+  if (row.assignmentStatus === "Dihantar") return "Completed";
+  if (deadlinePassed) return "Overdue";
+  if (row.assignmentStatus === "Sedang Diproses") return "In Progress";
+  return "Pending";
+}
+
+// ─── Helper: group senarai row (satu row = satu bahagian) jadi satu case per refNo ───
+function groupIntoCases(rows) {
+  const groups = {};
+  rows.forEach((r) => {
+    if (!groups[r.refNo]) {
+      groups[r.refNo] = {
+        ref: r.refNo,
+        title: r.title,
+        category: r.category,
+        subtitle: `${r.location || ""}${r.location && r.category ? " • " : ""}${r.category || ""}`,
+        arrived: formatDate(r.submissionDate),
+        deadline: formatDate(r.deadline),
+        documentStatus: r.documentStatus,
+        depts: [],
+      };
+    }
+    groups[r.refNo].depts.push(r);
+  });
+
+  return Object.values(groups)
+    .filter((g) => g.documentStatus !== "Selesai")
+    .map((g) => {
+      const deptStatuses = g.depts.map(mapDeptStatus);
+      let status;
+      if (deptStatuses.includes("Overdue")) status = "Overdue";
+      else if (deptStatuses.includes("In Progress")) status = "In Progress";
+      else if (deptStatuses.every((s) => s === "Completed")) status = "In Progress";
+      else status = "Pending";
+      return { ...g, status };
+    });
+}
+
+// ─── Helper: bina detail bahagian untuk modal ───
+function buildDeptTimeline(caseGroup) {
+  return caseGroup.depts.map((d) => ({
+    dept: d.deptName,
+    status: mapDeptStatus(d),
+    docTitle: d.reportID ? `Laporan ${d.deptName}` : "Belum ada laporan disediakan",
+    note: d.reportDetails || (d.reportID ? "" : "Laporan belum disediakan lagi."),
+    date: d.submittedAt ? formatDate(d.submittedAt) : formatDate(d.assignedAt),
+    staff: d.officerName || "Belum ditugaskan",
+  }));
+}
+
+const deptShortMap = {
+  "Bahagian Fizikal": "BF",
+  "Bahagian Masyarakat": "BM",
+  "Bahagian Pentadbiran": "BP",
+};
 
 function CaseStatusBadge({ status }) {
   const map = {
@@ -26,28 +83,28 @@ function CaseStatusBadge({ status }) {
 
 function DeptStatusBadge({ status }) {
   const map = {
-    Pending: { cls: "badge-pending", label: deptStatusLabel.Pending },
-    "In Progress": { cls: "badge-progress", label: deptStatusLabel["In Progress"] },
-    Completed: { cls: "badge-received", label: deptStatusLabel.Completed },
-    Overdue: { cls: "badge-overdue", label: deptStatusLabel.Overdue },
+    Pending: { cls: "badge-pending", label: "Belum Mula" },
+    "In Progress": { cls: "badge-progress", label: "Sedang Diproses" },
+    Completed: { cls: "badge-received", label: "Selesai Dihantar" },
+    Overdue: { cls: "badge-overdue", label: "Melebihi Tempoh" },
   };
   const conf = map[status] || map.Pending;
   return <span className={`status-badge ${conf.cls}`}>{conf.label}</span>;
 }
 
 function DeptTimelineItem({ entry }) {
-  const dept = deptDisplay[entry.dept] || { short: "?" };
+  const short = deptShortMap[entry.dept] || "?";
   const deptColorMap = {
     "Bahagian Fizikal": { color: "#1a6fa8", bg: "#e8f4fd", border: "#90c8f0" },
     "Bahagian Masyarakat": { color: "#6b3fa0", bg: "#f3eefe", border: "#c4a8e8" },
-    "Bahagian Pentadbiran (Bencana dan Keselamatan)": { color: "#027a48", bg: "#ecfdf3", border: "#a6f4c5" },
+    "Bahagian Pentadbiran": { color: "#027a48", bg: "#ecfdf3", border: "#a6f4c5" },
   };
   const colors = deptColorMap[entry.dept] || { color: "var(--text-soft)", bg: "var(--surface-2)", border: "var(--border)" };
 
   return (
     <div className="dept-timeline-item">
       <div className="dept-avatar" style={{ background: colors.bg, border: `1px solid ${colors.border}`, color: colors.color }}>
-        {dept.short}
+        {short}
       </div>
       <div className="dept-timeline-content">
         <div className="dept-timeline-top">
@@ -61,7 +118,7 @@ function DeptTimelineItem({ entry }) {
           </svg>
           <span>{entry.docTitle}</span>
         </div>
-        <p className="dept-timeline-note">{entry.note}</p>
+        {entry.note && <p className="dept-timeline-note">{entry.note}</p>}
         <div className="dept-timeline-meta">
           <span className="dept-timeline-meta-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -83,11 +140,10 @@ function DeptTimelineItem({ entry }) {
   );
 }
 
-function CaseHistoryModal({ caseRef, onClose }) {
-  if (!caseRef) return null;
-  const kes = caseRegistry[caseRef];
-  const deptStatuses = caseDeptStatus[caseRef] || [];
-  const relatedCases = workStatusCases.filter((c) => c.ref === caseRef);
+function CaseHistoryModal({ caseGroup, onClose }) {
+  if (!caseGroup) return null;
+  const deptStatuses = buildDeptTimeline(caseGroup);
+  const relatedReports = caseGroup.depts.filter((d) => d.reportID);
 
   return (
     <div className="case-modal-overlay show" onClick={onClose}>
@@ -98,11 +154,11 @@ function CaseHistoryModal({ caseRef, onClose }) {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
-              <span className="case-modal-id">{caseRef}</span>
+              <span className="case-modal-id">{caseGroup.ref}</span>
               <span className="case-modal-hop-count">{deptStatuses.length} bahagian terlibat</span>
             </div>
-            <div className="case-modal-title">{kes?.label}</div>
-            <span className="case-modal-category">{kes?.category}</span>
+            <div className="case-modal-title">{caseGroup.title}</div>
+            <span className="case-modal-category">{caseGroup.category}</span>
           </div>
           <button className="case-modal-close-btn" onClick={onClose}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -113,11 +169,14 @@ function CaseHistoryModal({ caseRef, onClose }) {
         </div>
         <div className="case-modal-body">
           <div>
-            <div className="case-modal-section-label">Dokumen Dalam Kes Ini</div>
-            {relatedCases.map((c) => (
-              <div className="case-modal-doc-row" key={c.ref}>
-                <span className="case-modal-doc-ref">{c.ref}</span>
-                <span className="case-modal-doc-title">{c.title}</span>
+            <div className="case-modal-section-label">Laporan Dalam Kes Ini</div>
+            {relatedReports.length === 0 && (
+              <div className="case-modal-doc-row"><span className="case-modal-doc-title">Belum ada laporan dihantar lagi.</span></div>
+            )}
+            {relatedReports.map((r) => (
+              <div className="case-modal-doc-row" key={r.reportID}>
+                <span className="case-modal-doc-ref">{r.reportID}</span>
+                <span className="case-modal-doc-title">Laporan {r.deptName}</span>
               </div>
             ))}
           </div>
@@ -138,11 +197,41 @@ function CaseHistoryModal({ caseRef, onClose }) {
 }
 
 export default function PPBStatusKerja() {
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeCaseRef, setActiveCaseRef] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
-  const inProgressCount = workStatusCases.filter((c) => c.status === "In Progress").length;
-  const overdueCount    = workStatusCases.filter((c) => c.status === "Overdue").length;
-  const pendingCount    = workStatusCases.filter((c) => c.status === "Pending").length;
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/document-departments`)
+      .then((res) => res.json())
+      .then((data) => {
+        setCases(groupIntoCases(data));
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Gagal ambil data status kerja:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  const activeCase = cases.find((c) => c.ref === activeCaseRef) || null;
+
+  const totalPages = Math.ceil(cases.length / itemsPerPage) || 1;
+  const paginated = cases.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // reset ke page 1 bila data kes berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [cases.length]);
+
+  const inProgressCount = cases.filter((c) => c.status === "In Progress").length;
+  const overdueCount    = cases.filter((c) => c.status === "Overdue").length;
+  const pendingCount    = cases.filter((c) => c.status === "Pending").length;
 
   return (
     <>
@@ -205,9 +294,10 @@ export default function PPBStatusKerja() {
         <div className="table-panel">
           <div className="table-panel-header">
             <div>
-              {/* ← PERUBAHAN: "Senarai Kes Aktif" → "Status Kes" */}
               <div className="table-panel-title">Status Kes</div>
-              <div className="table-panel-sub">Menunjukkan {workStatusCases.length} kes yang sedang dalam proses koordinasi bahagian</div>
+              <div className="table-panel-sub">
+                {loading ? "Memuatkan..." : `Menunjukkan ${cases.length} kes yang sedang dalam proses koordinasi bahagian`}
+              </div>
             </div>
             <div className="search-input-wrap search-input-sk-wrap">
               <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -230,7 +320,7 @@ export default function PPBStatusKerja() {
               </tr>
             </thead>
             <tbody>
-              {workStatusCases.map((c) => (
+              {paginated.map((c) => (
                 <tr key={c.ref}>
                   <td className="td-ref">{c.ref}</td>
                   <td>
@@ -260,12 +350,26 @@ export default function PPBStatusKerja() {
                   </td>
                 </tr>
               ))}
+
+              {!loading && cases.length === 0 && (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: "center", color: "var(--text-soft)", padding: "28px" }}>
+                    Tiada kes dalam proses koordinasi setakat ini.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
 
-      <CaseHistoryModal caseRef={activeCaseRef} onClose={() => setActiveCaseRef(null)} />
+      <CaseHistoryModal caseGroup={activeCase} onClose={() => setActiveCaseRef(null)} />
     </>
   );
 }

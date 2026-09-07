@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/common/navbar";
-import { assignedTasks } from "../../data/PPLData";
+import Pagination from "../../components/common/Pagination";
 import "../../styles/pages/PPLTugasanDetail.css";
+
+const ITEMS_PER_PAGE = 6;
 
 /* ─── Badge keutamaan (sama style dgn KB) ─── */
 function PriorityBadge({ keutamaan }) {
@@ -31,10 +33,23 @@ function PriorityBadge({ keutamaan }) {
 }
 
 /* ─── List view: Senarai Tugasan Saya ─── */
-function TaskListView({ tasks, onOpenDetail }) {
+function TaskListView({ tasks, onOpenDetail, loading }) {
   const tinggiCount   = tasks.filter((t) => t.keutamaan === "Tinggi").length;
   const sederhanaCount = tasks.filter((t) => t.keutamaan === "Sederhana").length;
   const rendahCount   = tasks.filter((t) => t.keutamaan === "Rendah").length;
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(tasks.length / ITEMS_PER_PAGE));
+
+  // Reset ke muka surat 1 bila senarai tugasan berubah (contoh: lepas data loading siap)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [tasks.length]);
+
+  const pagedTasks = tasks.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div>
@@ -93,7 +108,7 @@ function TaskListView({ tasks, onOpenDetail }) {
         <div className="table-panel-header">
           <div>
             <div className="table-panel-title">Senarai Tugasan Saya</div>
-            <div className="table-panel-sub">Akses kes yang ditugaskan kepada anda dan lampirkan laporan siasatan / dapatan</div>
+            <div className="table-panel-sub">{loading ? "Memuatkan..." : "Akses kes yang ditugaskan kepada anda dan lampirkan laporan siasatan / dapatan"}</div>
           </div>
         </div>
 
@@ -117,7 +132,7 @@ function TaskListView({ tasks, onOpenDetail }) {
             </tr>
           </thead>
           <tbody>
-            {tasks.map((t) => (
+            {pagedTasks.map((t) => (
               <tr key={t.id}>
                 <td className="td-ref">{t.caseRef}</td>
                 <td>
@@ -143,6 +158,12 @@ function TaskListView({ tasks, onOpenDetail }) {
             ))}
           </tbody>
         </table>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </div>
   );
@@ -319,10 +340,42 @@ function TaskDetailView({ task, onBack, onContinueToUpload }) {
   );
 }
 
+const currentOfficerID = () => JSON.parse(localStorage.getItem("user") || "{}").userID || "U004";
+
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }) : "-");
+
 export default function PPLArahanKetuaBahagian() {
   const navigate = useNavigate();
   const [view, setView] = useState("list");
   const [selectedTask, setSelectedTask] = useState(null);
+  const [assignedTasks, setAssignedTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/document-departments?officerID=${currentOfficerID()}`)
+      .then((res) => res.json())
+      .then((rows) => {
+        setAssignedTasks(
+          rows.map((r) => ({
+            id: r.id,
+            caseRef: r.refNo,
+            caseTitle: r.title,
+            kbInstruction: r.instruction || "Tiada arahan terperinci diberikan.",
+            kbName: null, // tiada dalam backend — fallback default akan terpapar
+            dateGiven: formatDate(r.assignedAt),
+            deadline: formatDate(r.deadline),
+            keutamaan: r.priority,
+            taskTitle: null, // tiada dalam backend — fallback default akan terpapar
+            kbAttachments: [],
+          }))
+        );
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Gagal ambil senarai tugasan:", err);
+        setLoading(false);
+      });
+  }, []);
 
   const handleOpenDetail = (task) => {
     setSelectedTask(task);
@@ -350,7 +403,7 @@ export default function PPLArahanKetuaBahagian() {
 
       <div className="content">
         {view === "list" ? (
-          <TaskListView tasks={assignedTasks} onOpenDetail={handleOpenDetail} />
+          <TaskListView tasks={assignedTasks} onOpenDetail={handleOpenDetail} loading={loading} />
         ) : (
           <TaskDetailView
             task={selectedTask}

@@ -1,7 +1,81 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Navbar from "../../components/common/navbar";
-import { caseList, caseDepartmentReports, caseDeptSubmissions, STRATEGI_MAPPING } from "../../data/caseData";
+import Pagination from "../../components/common/Pagination";
 import "../../styles/pages/PenerimaanLaporan.css";
+
+const ITEMS_PER_PAGE = 6;
+
+// ─── Animation steps untuk simulasi "Konsolidasi AI" (kosmetik sahaja, tak connect ke backend) ───
+const STRATEGI_MAPPING = [
+  { pct: 15, msg: "Membaca laporan Bahagian Fizikal..." },
+  { pct: 35, msg: "Menganalisis data empirikal Bahagian Masyarakat..." },
+  { pct: 60, msg: "Memproses parameter keselamatan Bahagian Pentadbiran..." },
+  { pct: 80, msg: "Menggabungkan aset multimedia dan tabular..." },
+  { pct: 95, msg: "Menyelaraskan struktur format dokumen rasmi..." },
+  { pct: 100, msg: "Konsolidasi selesai. Menjana draf Word..." },
+];
+
+// ─── Helper: format tarikh ───
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }) : "-");
+
+const deptClassMap = {
+  "Bahagian Fizikal": "dept-fizikal",
+  "Bahagian Masyarakat": "dept-masyarakat",
+  "Bahagian Pentadbiran": "dept-pentadbiran",
+};
+const deptSubtitleMap = {
+  "Bahagian Fizikal": "Infrastruktur, Kos & Tapak",
+  "Bahagian Masyarakat": "Aduan Awam & Impak Komuniti",
+  "Bahagian Pentadbiran": "Bencana & Keselamatan",
+};
+const deptIconMap = {
+  "Bahagian Fizikal": (<><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /></>),
+  "Bahagian Masyarakat": (<><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></>),
+  "Bahagian Pentadbiran": <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+};
+
+// ─── Helper: fetch semua assignment, group ikut refNo jadi shape yang UI ni expect ───
+function groupIntoCases(rows) {
+  const groups = {};
+  rows.forEach((r) => {
+    if (!groups[r.refNo]) {
+      groups[r.refNo] = {
+        ref: r.refNo,
+        title: r.title,
+        subtitle: `${r.location || ""}${r.location && r.category ? " • " : ""}${r.category || ""}`,
+        tarikhTerima: formatDate(r.submissionDate),
+        tempohAkhir: formatDate(r.deadline),
+        overdue: r.deadline ? new Date(r.deadline) < new Date() : false,
+        keutamaan: r.priority,
+        documentStatus: r.documentStatus,
+        depts: [],
+      };
+    }
+    groups[r.refNo].depts.push(r);
+  });
+
+  return Object.values(groups)
+    .filter((g) => g.documentStatus !== "Selesai")
+    .map((g) => ({
+      ...g,
+      totalDepts: g.depts.length,
+      submittedCount: g.depts.filter((d) => d.assignmentStatus === "Dihantar").length,
+      reports: g.depts.map((d) => ({
+        id: d.deptID,
+        deptClass: deptClassMap[d.deptName] || "",
+        name: d.deptName,
+        subtitle: deptSubtitleMap[d.deptName] || "",
+        submitted: d.assignmentStatus === "Dihantar",
+        icon: deptIconMap[d.deptName] || null,
+        infoRows: [
+          ["Pegawai Penyedia", d.officerName || "Belum ditugaskan"],
+          ["Tarikh Laporan", d.submittedAt ? formatDate(d.submittedAt) : "—"],
+          ["Butiran Laporan", d.reportDetails || "Belum ada laporan disediakan."],
+        ],
+        attachments: [],
+      })),
+    }));
+}
 
 const ALLOWED_TYPES = [
   "application/pdf",
@@ -62,6 +136,19 @@ function CaseListView({ cases, onOpenCase }) {
   const tinggiCount    = cases.filter((c) => c.keutamaan === "Tinggi").length;
   const sederhanaCount = cases.filter((c) => c.keutamaan === "Sederhana").length;
   const rendahCount    = cases.filter((c) => c.keutamaan === "Rendah").length;
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(cases.length / ITEMS_PER_PAGE));
+
+  // Reset ke muka surat 1 bila senarai kes berubah (contoh: lepas data loading siap atau refresh)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [cases.length]);
+
+  const pagedCases = cases.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div>
@@ -161,9 +248,7 @@ function CaseListView({ cases, onOpenCase }) {
             </tr>
           </thead>
           <tbody>
-            {cases.map((c) => {
-              const submittedDepts = caseDeptSubmissions[c.ref] || [];
-              const allSubmitted = submittedDepts.length === c.totalDepts;
+            {pagedCases.map((c) => {
               return (
                 <tr key={c.ref}>
                   <td className="td-ref">{c.ref}</td>
@@ -176,7 +261,7 @@ function CaseListView({ cases, onOpenCase }) {
                     {c.tempohAkhir}{c.overdue ? " ▲" : ""}
                   </td>
                   <td><PriorityBadge keutamaan={c.keutamaan} /></td>
-                  <td><SubmissionPill submitted={submittedDepts.length} total={c.totalDepts} /></td>
+                  <td><SubmissionPill submitted={c.submittedCount} total={c.totalDepts} /></td>
                   <td>
                     <button
                       className="btn-tindakan"
@@ -194,6 +279,12 @@ function CaseListView({ cases, onOpenCase }) {
             })}
           </tbody>
         </table>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </div>
   );
@@ -564,9 +655,31 @@ function Toast({ show, message, onClose }) {
   );
 }
 
+const currentPPBUserID = () => JSON.parse(localStorage.getItem("user") || "{}").userID || "U001";
+
 export default function PPBPenerimaanLaporan() {
+  const [cases, setCases] = useState([]);
+  const [loadingCases, setLoadingCases] = useState(true);
   const [view, setView] = useState("list");
   const [selectedCase, setSelectedCase] = useState(null);
+
+  const loadCases = () => {
+    setLoadingCases(true);
+    fetch(`http://localhost:5000/api/document-departments`)
+      .then((res) => res.json())
+      .then((data) => {
+        setCases(groupIntoCases(data));
+        setLoadingCases(false);
+      })
+      .catch((err) => {
+        console.error("Gagal ambil senarai kes:", err);
+        setLoadingCases(false);
+      });
+  };
+
+  useEffect(() => {
+    loadCases();
+  }, []);
   const [openCards, setOpenCards] = useState({});
   const [isConsolidating, setIsConsolidating] = useState(false);
   const [progress, setProgress] = useState({ pct: 0, msg: "" });
@@ -613,19 +726,43 @@ export default function PPBPenerimaanLaporan() {
     link.download = "Draf_Laporan_Konsolidasi_AI.docx"; link.click();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/compile-reports`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          refNo: selectedCase.ref,
+          finalizedBy: currentPPBUserID(),
+          finalSummary: `Laporan daripada semua bahagian telah disahkan dan diselaraskan bagi kes ${selectedCase.ref}.`,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        setIsSubmitting(false);
+        setToast({ show: true, message: `Gagal kemukakan laporan: ${err.message || "ralat tidak diketahui"}` });
+        setTimeout(() => setToast((t) => ({ ...t, show: false })), 6000);
+        return;
+      }
+
       setIsSubmitting(false); setIsSubmitted(true);
       setToast({ show: true, message: `Laporan lengkap ${selectedCase?.ref ?? ""} telah dikemukakan kepada Ketua Jabatan untuk semakan dan kelulusan.` });
       setTimeout(() => setToast((t) => ({ ...t, show: false })), 6000);
-    }, 1000);
+      loadCases(); // refresh senarai — case ni akan hilang dari list sebab status dah 'Selesai'
+    } catch (err) {
+      console.error("Ralat sambungan:", err);
+      setIsSubmitting(false);
+      setToast({ show: true, message: "Tidak dapat menghubungi pelayan" });
+      setTimeout(() => setToast((t) => ({ ...t, show: false })), 6000);
+    }
   };
 
   // Per-case reports and submission state
-  const caseReports = selectedCase ? (caseDepartmentReports[selectedCase.ref] || []) : [];
+  const caseReports = selectedCase ? selectedCase.reports : [];
   const allSubmitted = selectedCase
-    ? (caseDeptSubmissions[selectedCase.ref] || []).length === selectedCase.totalDepts
+    ? selectedCase.submittedCount === selectedCase.totalDepts
     : false;
 
   return (
@@ -633,11 +770,13 @@ export default function PPBPenerimaanLaporan() {
       <Navbar
         title="Penerimaan Laporan"
         breadcrumbItems={["e-Urus PDK", "Subsistem 3", "Penerimaan Laporan"]}
-        statusText={`${caseList.length} Kes Menunggu Tindakan`}
+        statusText={loadingCases ? "Memuatkan..." : `${cases.length} Kes Menunggu Tindakan`}
+        userName="Zulkifli Hasan"
+        userRole="Pegawai Penyelaras Bahagian"
       />
       <div className="content">
         {view === "list" ? (
-          <CaseListView cases={caseList} onOpenCase={handleOpenCase} />
+          <CaseListView cases={cases} onOpenCase={handleOpenCase} />
         ) : (
           <CaseDetailView
             caseItem={selectedCase}

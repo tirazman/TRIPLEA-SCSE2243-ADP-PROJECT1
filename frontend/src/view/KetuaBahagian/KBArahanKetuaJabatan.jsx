@@ -1,7 +1,68 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/common/navbar";
-import { arahanKes } from "../../data/arahanKetuaJabatanData";
+import Pagination from "../../components/common/Pagination";
+
+const DEPT_ID = "D001"; // Page ni scoped untuk Ketua Bahagian - Fizikal (ikut Navbar asal)
+const ITEMS_PER_PAGE = 6;
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }) : "-");
+
+function useArahanKes() {
+  const [arahanKes, setArahanKes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`http://localhost:5000/api/document-departments`).then((r) => r.json()),
+      fetch(`http://localhost:5000/api/documents`).then((r) => r.json()),
+      fetch(`http://localhost:5000/api/reports`).then((r) => r.json()),
+    ])
+      .then(([assignments, documents, reports]) => {
+        const docLookup = {};
+        documents.forEach((d) => { docLookup[d.refNo] = d; });
+
+        const approvedKey = (refNo, deptID) => `${refNo}__${deptID}`;
+        const approvedSet = new Set(
+          reports
+            .filter((r) => r.status === "Diluluskan")
+            .map((r) => approvedKey(r.refNo, r.deptID))
+        );
+
+        const mapped = assignments
+          .filter((a) => a.deptID === DEPT_ID)
+          .filter((a) => !approvedSet.has(approvedKey(a.refNo, a.deptID))) // dah dihantar KB -> tak perlu tindakan lagi
+          .map((a) => {
+            const doc = docLookup[a.refNo] || {};
+            return {
+              id: a.refNo,
+              tajuk: a.title,
+              subtajuk: `${a.category || "Umum"} — ${a.location || "Tiada lokasi dinyatakan"}`,
+              tarikhArahan: formatDate(a.assignedAt),
+              tarikhTerima: formatDate(a.submissionDate),
+              tempohAkhir: formatDate(a.deadline),
+              kategori: a.category || "-",
+              didaftarOleh: doc.submittedByName || "-",
+              keutamaan: a.priority,
+              desc: a.description || "",
+              aiSummary: a.aiSummary || "Rumusan AI belum dijana untuk kes ini.",
+              notaKj: null,
+              lampiran: [
+                { nama: "Fail digital dimuat naik oleh Pembantu Tadbir", oleh: doc.submittedByName || "-", tarikh: formatDate(a.submissionDate) },
+              ],
+            };
+          });
+
+        setArahanKes(mapped);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Gagal ambil senarai arahan kes:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  return { arahanKes, loading };
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -24,10 +85,23 @@ function PriorityBadge({ keutamaan }) {
 
 // ─── View A: Senarai ──────────────────────────────────────────────────────────
 
-function ViewSenarai({ onSemak }) {
+function ViewSenarai({ onSemak, arahanKes, loading }) {
   const tinggiCount    = arahanKes.filter((k) => k.keutamaan === "Tinggi").length;
   const sederhanaCount = arahanKes.filter((k) => k.keutamaan === "Sederhana").length;
   const rendahCount    = arahanKes.filter((k) => k.keutamaan === "Rendah").length;
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(arahanKes.length / ITEMS_PER_PAGE));
+
+  // Reset ke muka surat 1 bila senarai kes berubah (contoh: lepas data loading siap)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [arahanKes.length]);
+
+  const pagedArahanKes = arahanKes.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <>
@@ -87,7 +161,7 @@ function ViewSenarai({ onSemak }) {
           <div>
             <div className="table-panel-title">Senarai Arahan Kes</div>
             <div className="table-panel-sub">
-              {arahanKes.length} kes diterima — {tinggiCount} berkeutamaan tinggi memerlukan tindakan segera
+              {loading ? "Memuatkan..." : `${arahanKes.length} kes diterima — ${tinggiCount} berkeutamaan tinggi memerlukan tindakan segera`}
             </div>
           </div>
         </div>
@@ -112,7 +186,7 @@ function ViewSenarai({ onSemak }) {
             </tr>
           </thead>
           <tbody>
-            {arahanKes.map((kes) => (
+            {pagedArahanKes.map((kes) => (
               <tr key={kes.id}>
                 <td className="td-ref">{kes.id}</td>
                 <td>
@@ -138,6 +212,12 @@ function ViewSenarai({ onSemak }) {
             ))}
           </tbody>
         </table>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </>
   );
@@ -362,6 +442,7 @@ export default function KBArahanKetuaJabatan() {
   const navigate = useNavigate();
   const [view, setView] = useState("senarai");
   const [selectedKes, setSelectedKes] = useState(null);
+  const { arahanKes, loading } = useArahanKes();
 
   const handleSemak = (kes) => {
     setSelectedKes(kes);
@@ -376,7 +457,7 @@ export default function KBArahanKetuaJabatan() {
   };
 
   const handleTeruskan = () => {
-    navigate(`/ketua-bahagian/arahan-ketua-jabatan/${selectedKes.id}/hantar-laporan`);
+    navigate(`/ketua-bahagian/arahan-ketua-jabatan/${encodeURIComponent(selectedKes.id)}/hantar-laporan`);
   };
 
   const navTitle = view === "detail" && selectedKes
@@ -397,7 +478,7 @@ export default function KBArahanKetuaJabatan() {
       />
 
       <div className="content">
-        {view === "senarai" && <ViewSenarai onSemak={handleSemak} />}
+        {view === "senarai" && <ViewSenarai onSemak={handleSemak} arahanKes={arahanKes} loading={loading} />}
         {view === "detail" && selectedKes && (
           <ViewDetail kes={selectedKes} onKembali={handleKembali} onTeruskan={handleTeruskan} />
         )}

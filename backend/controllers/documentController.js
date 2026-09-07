@@ -83,3 +83,33 @@ exports.getDocumentByRef = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+exports.updateDocument = async (req, res) => {
+    const { refNo } = req.params;
+    const { status, deadline, priority, aiSummary } = req.body;
+
+    const fields = [];
+    const values = [];
+    if (status) { fields.push("status = ?"); values.push(status); }
+    if (deadline) { fields.push("deadline = ?"); values.push(deadline); }
+    if (priority) { fields.push("priority = ?"); values.push(priority); }
+    if (aiSummary !== undefined) { fields.push("aiSummary = ?"); values.push(aiSummary); }
+
+    if (fields.length === 0) {
+        return res.status(400).json({ message: "Tiada field untuk dikemaskini" });
+    }
+
+    try {
+        values.push(refNo);
+        const [result] = await db.execute(
+            `UPDATE Document SET ${fields.join(", ")} WHERE refNo = ?`,
+            values
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Document tidak dijumpai" });
+        }
+        res.status(200).json({ message: "Document berjaya dikemaskini" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};

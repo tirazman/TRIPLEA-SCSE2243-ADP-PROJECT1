@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Navbar from "../../components/common/navbar";
-import { initialDocuments, janaRingkasanLokal } from "../../data/pengagihanBahagianData";
+import Pagination from "../../components/common/Pagination";
 import "../../styles/pages/PenerimaanLaporan.css";
 import "../../styles/pages/PengagihanTugasan.css";
 import "../../styles/pages/PengagihanBahagian.css";
@@ -27,15 +27,99 @@ const AI_STEPS = [
   "Menyediakan ringkasan akhir...",
 ];
 
-function formatToday() {
-  const today = new Date();
-  const bulan = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogos", "Sep", "Okt", "Nov", "Dis"];
-  return `${today.getDate()} ${bulan[today.getMonth()]} ${today.getFullYear()}`;
+// ─── Mapping nama bahagian <-> deptID backend ───
+const deptNameToId = {
+  "Bahagian Fizikal": "D001",
+  "Bahagian Masyarakat": "D002",
+  "Bahagian Pentadbiran": "D003",
+};
+
+// ─── Tukar status Document (backend) jadi 3 kategori yang UI ni pakai ───
+function mapDocStatus(status) {
+  if (status === "Didaftar" || status === "Menunggu Semakan KJ") return "menunggu";
+  if (status === "Selesai") return "selesai";
+  return "diproses"; // Diagihkan, Dalam Tindakan
 }
+
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }) : "-");
 
 /** Belum diagih = status menunggu sahaja */
 function canAssign(doc) {
   return doc.status === "menunggu";
+}
+
+// ─── Simulasi cadangan AI (kosmetik/lokal — tak connect ke backend, sebab dari asal pun bukan network call) ───
+function janaRingkasanLokal(doc) {
+  const teks = `${doc.title} ${doc.catatan} ${doc.cat} ${doc.loc}`.toLowerCase();
+
+  const rules = [
+    {
+      nama: "Bahagian Fizikal",
+      sebab:
+        "Menguruskan hal ehwal pembangunan infrastruktur, penyelenggaraan jalan raya, sistem saliran longkang, pengurusan banjir serta fasiliti awam.",
+      keywords: [
+        "jalan", "lubang", "turap", "rekahan", "permukaan", "lampu isyarat", "banjir",
+        "air bertakung", "longkang", "saliran", "parit", "tersumbat", "pokok tumbang",
+        "infrastruktur", "pembinaan", "gelanggang", "tapak pembuangan", "sampah", "pelupusan",
+      ],
+      weight: 0,
+    },
+    {
+      nama: "Bahagian Masyarakat",
+      sebab:
+        "Menyelaras isu-isu kebajikan komuniti setempat, aduan kesihatan awam, permohonan kemudahan rekreasi penduduk, serta persatuan taman.",
+      keywords: [
+        "penduduk", "persatuan", "masyarakat", "kesihatan", "loya", "pening", "bernafas",
+        "sakit", "rekreasi", "taman", "gelanggang", "kemudahan", "terjejas", "rumah terjejas", "komuniti",
+      ],
+      weight: 0,
+    },
+    {
+      nama: "Bahagian Pentadbiran",
+      sebab:
+        "Mengendalikan pengurusan dokumen, perancangan guna tanah rizab, sokongan rasmi, peruntukan kos anggaran, urusan am sistem dan koordinasi agensi.",
+      keywords: [
+        "permohonan", "pelan", "kos", "anggaran kos", "tanah rizab", "sokongan",
+        "ditandatangani", "laporan", "rujukan", "dana", "peruntukan",
+      ],
+      weight: 0,
+    },
+  ];
+
+  rules.forEach((r) => {
+    r.keywords.forEach((kw) => {
+      if (teks.includes(kw)) r.weight += 12 + kw.length;
+    });
+    if (r.nama === "Bahagian Fizikal") {
+      if (doc.cat.includes("Jalan") || doc.cat.includes("Infrastruktur") || doc.cat.includes("Awam")) r.weight += 30;
+      if (doc.cat.includes("Alam Sekitar")) r.weight += 20;
+    }
+    if (r.nama === "Bahagian Masyarakat") {
+      if (doc.cat.includes("Rekreasi") || doc.cat.includes("Alam Sekitar")) r.weight += 30;
+      if (doc.catatan.includes("penduduk") || doc.catatan.includes("terjejas")) r.weight += 20;
+    }
+    if (r.nama === "Bahagian Pentadbiran") {
+      if (doc.catatan.includes("permohonan") || doc.catatan.includes("kos") || doc.catatan.includes("pelan")) r.weight += 25;
+    }
+  });
+
+  rules.sort((a, b) => b.weight - a.weight);
+
+  const maxW = rules[0].weight || 1;
+  const cadangan_bahagian = rules.map((r, i) => ({
+    nama_bahagian: r.nama,
+    sebab: r.sebab,
+    keyakinan: Math.min(96, Math.max(60, Math.round(65 + (r.weight / maxW) * 30) - i * 8)),
+  }));
+
+  const ringkasan = `Berdasarkan analisis dokumen yang dimuat naik, aduan bertajuk "${doc.title}" diterima pada ${doc.tarikh}. ${doc.catatan.split(".")[0]}. Cadangan bahagian: ${
+    cadangan_bahagian
+      .filter((c) => c.keyakinan > 75)
+      .map((c) => c.nama_bahagian)
+      .join(" dan ") || cadangan_bahagian[0].nama_bahagian
+  }. Tindakan segera diperlukan sebelum tempoh akhir ${doc.akhir}.`;
+
+  return { ringkasan, cadangan_bahagian };
 }
 
 function SubmissionInfo({ doc }) {
@@ -51,7 +135,7 @@ function SubmissionInfo({ doc }) {
 
         <div className="kj-field kj-field--full">
           <div className="meta-key">Catatan Tambahan</div>
-          <div className="kj-field-val">{doc.catatan}</div>
+          <div className="kj-field-val">{doc.catatan || "—"}</div>
         </div>
 
         <div className="kj-field">
@@ -117,16 +201,17 @@ function AssignmentHistory({ assignedTo }) {
 }
 
 export default function KJPengagihanBahagian() {
-  const [documents, setDocuments] = useState(initialDocuments);
+  const [documents, setDocuments] = useState([]);
+  const [loadingDocs, setLoadingDocs] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("semua");
   const [selectedDocId, setSelectedDocId] = useState(null);
   const [selectedDepts, setSelectedDepts] = useState([]);
   const [assignNote, setAssignNote] = useState("");
-  
+
   // State untuk tempoh akhir & keutamaan kes
   const [deadlineDate, setDeadlineDate] = useState("");
-  const [priority, setPriority] = useState("Sederhana"); // Tambah state keutamaan
+  const [priority, setPriority] = useState("Sederhana");
 
   const [aiLoading, setAiLoading] = useState(false);
   const [loadingText, setLoadingText] = useState(AI_STEPS[0]);
@@ -140,6 +225,38 @@ export default function KJPengagihanBahagian() {
 
   const selectedDoc = documents.find((d) => d.id === selectedDocId) ?? null;
   const isReadOnly = selectedDoc ? !canAssign(selectedDoc) : false;
+
+  const loadDocuments = () => {
+    setLoadingDocs(true);
+    fetch(`http://localhost:5000/api/documents`)
+      .then((res) => res.json())
+      .then((data) => {
+        setDocuments(
+          data.map((d) => ({
+            id: d.refNo,
+            title: d.title,
+            catatan: d.description || "",
+            loc: d.location || "",
+            cat: d.category || "",
+            tarikh: formatDate(d.submissionDate),
+            akhir: formatDate(d.deadline),
+            status: mapDocStatus(d.status),
+            priority: d.priority,
+            assignedTo: [],
+            file: { name: "Fail digital dimuat naik oleh Pembantu Tadbir", size: "-", type: "pdf" },
+          }))
+        );
+        setLoadingDocs(false);
+      })
+      .catch((err) => {
+        console.error("Gagal ambil senarai dokumen:", err);
+        setLoadingDocs(false);
+      });
+  };
+
+  useEffect(() => {
+    loadDocuments();
+  }, []);
 
   const stats = useMemo(
     () => ({
@@ -159,6 +276,13 @@ export default function KJPengagihanBahagian() {
     });
   }, [documents, search, filter]);
 
+  // --- Pagination ---
+  const ITEMS_PER_PAGE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+  useEffect(() => { setCurrentPage(1); }, [search, filter]);
+  const totalPages = Math.max(1, Math.ceil(filteredDocs.length / ITEMS_PER_PAGE));
+  const paginatedDocs = filteredDocs.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   useEffect(() => {
     return () => {
       if (stepTimerRef.current) clearInterval(stepTimerRef.current);
@@ -171,16 +295,32 @@ export default function KJPengagihanBahagian() {
     setTimeout(() => setToast(null), 4500);
   };
 
-  const openPanel = (doc) => {
+  const openPanel = async (doc) => {
     setSelectedDocId(doc.id);
     setSelectedDepts([]);
     setAssignNote("");
     setDeadlineDate("");
-    setPriority("Sederhana"); // Reset kepada Sederhana bila tukar kes
+    setPriority("Sederhana");
     setAiResult(null);
     setHasSummarized(false);
     setAiLoading(false);
     setLoadingText(AI_STEPS[0]);
+
+    // Ambil sejarah pengagihan (departments) untuk dokumen ni
+    try {
+      const res = await fetch(`http://localhost:5000/api/documents/${encodeURIComponent(doc.id)}`);
+      const detail = await res.json();
+      const grouped = {};
+      (detail.departments || []).forEach((d) => {
+        const key = d.assignedAt ? d.assignedAt.split("T")[0] : "-";
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(d.deptName);
+      });
+      const assignedTo = Object.entries(grouped).map(([tarikh, jabatan]) => ({ tarikh, jabatan }));
+      setDocuments((prev) => prev.map((d) => (d.id === doc.id ? { ...d, assignedTo } : d)));
+    } catch (err) {
+      console.error("Gagal ambil sejarah pengagihan:", err);
+    }
   };
 
   const closePanel = () => {
@@ -216,7 +356,7 @@ export default function KJPengagihanBahagian() {
     summarizeTimerRef.current = setTimeout(() => {
       if (stepTimerRef.current) clearInterval(stepTimerRef.current);
       const parsed = janaRingkasanLokal(selectedDoc);
-      
+
       if (parsed && parsed.cadangan_bahagian) {
         parsed.cadangan_bahagian = parsed.cadangan_bahagian.map((dept, index) => {
           const kategoriMap = [
@@ -247,30 +387,45 @@ export default function KJPengagihanBahagian() {
     setSelectedDepts((prev) => prev.filter((d) => d !== name));
   };
 
-  const confirmAssign = () => {
+  const confirmAssign = async () => {
     if (!selectedDoc || selectedDepts.length === 0 || isReadOnly) return;
 
     const jumlahJabatan = selectedDepts.length;
 
-    setDocuments((prev) =>
-      prev.map((d) =>
-        d.id === selectedDoc.id
-          ? {
-              ...d,
-              status: "diproses",
-              priority: priority, // Simpan keutamaan kes ke dalam state data kes
-              assignedTo: [
-                ...(d.assignedTo || []),
-                { tarikh: formatToday(), jabatan: [...selectedDepts] },
-              ],
-            }
-          : d
-      )
-    );
+    try {
+      for (const name of selectedDepts) {
+        const deptID = deptNameToId[name];
+        if (!deptID) continue;
+        await fetch(`http://localhost:5000/api/document-departments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refNo: selectedDoc.id, deptID }),
+        });
+      }
 
-    setShowConfirm(false);
-    closePanel();
-    showToastMsg(`Dokumen ${selectedDoc.id} berjaya diagihkan kepada ${jumlahJabatan} bahagian.`);
+      const patchBody = { status: "Diagihkan", deadline: deadlineDate, priority };
+      if (aiResult) patchBody.aiSummary = aiResult.ringkasan;
+
+      const res = await fetch(`http://localhost:5000/api/documents/${encodeURIComponent(selectedDoc.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patchBody),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        showToastMsg(`Gagal mengagihkan: ${err.message || "ralat tidak diketahui"}`);
+        return;
+      }
+
+      setShowConfirm(false);
+      closePanel();
+      showToastMsg(`Dokumen ${selectedDoc.id} berjaya diagihkan kepada ${jumlahJabatan} bahagian.`);
+      loadDocuments();
+    } catch (err) {
+      console.error("Ralat sambungan:", err);
+      showToastMsg("Tidak dapat menghubungi pelayan — sila cuba semula.");
+    }
   };
 
   return (
@@ -327,7 +482,7 @@ export default function KJPengagihanBahagian() {
             </div>
             <div>
               <div className="summary-val">{stats.selesai}</div>
-              <div className="summary-label">Diselesaikan (Jun 2025)</div>
+              <div className="summary-label">Diselesaikan</div>
             </div>
           </div>
         </div>
@@ -364,7 +519,9 @@ export default function KJPengagihanBahagian() {
             <div>
               <div className="table-panel-title">Senarai Dokumen</div>
               <div className="table-panel-sub">
-                {search
+                {loadingDocs
+                  ? "Memuatkan..."
+                  : search
                   ? `${filteredDocs.length} hasil carian`
                   : `Menunjukkan ${filteredDocs.length} dokumen`}
               </div>
@@ -391,7 +548,7 @@ export default function KJPengagihanBahagian() {
                     </td>
                   </tr>
                 ) : (
-                  filteredDocs.map((doc) => {
+                  filteredDocs.length > 0 && paginatedDocs.map((doc) => {
                     const statusInfo = STATUS_MAP[doc.status];
                     const isSelected = selectedDocId === doc.id;
                     return (
@@ -435,6 +592,7 @@ export default function KJPengagihanBahagian() {
               </tbody>
             </table>
           </div>
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </div>
       </div>
 
@@ -577,7 +735,6 @@ export default function KJPengagihanBahagian() {
                             />
                           </div>
 
-                          {/* 📌 PENAMBAHAN BUTTON DROPDOWN KEUTAMAAN */}
                           <div style={{ marginBottom: "12px" }}>
                             <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-mid)", marginBottom: "4px" }}>
                               Tahap Keutamaan Kes <span style={{ color: "var(--red)" }}>*</span>

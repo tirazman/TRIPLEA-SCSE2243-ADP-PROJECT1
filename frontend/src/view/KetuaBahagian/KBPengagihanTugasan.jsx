@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../../components/common/navbar";
-import {
-  availableCases,
-  officerList,
-  priorityLevels,
-  initialTugasanList,
-} from "../../data/tugasanData";
+import Pagination from "../../components/common/Pagination";
 import "../../styles/pages/PengagihanTugasan.css";
+
+const DEPT_ID = "D001"; // Page ni scoped untuk Ketua Bahagian - Fizikal (ikut Navbar asal)
+const priorityLevels = ["Tinggi", "Sederhana", "Rendah"];
+
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }) : "-");
+const toDateInput = (d) => (d ? new Date(d).toISOString().split("T")[0] : "");
 
 /* ─── Badge status tugasan ─── */
 function TugasanStatusBadge({ status }) {
@@ -27,11 +28,10 @@ function PriorityPill({ priority }) {
 }
 
 /* ─── Modal: Tugasan Baharu (form) ─── */
-function NewTugasanModal({ onClose, onCreate }) {
+function NewTugasanModal({ onClose, onCreate, availableCases, officerList }) {
   const [form, setForm] = useState({
     caseRef: "",
     officer: "",
-    title: "",
     instruction: "",
     deadline: "",
     priority: "Sederhana",
@@ -41,7 +41,7 @@ function NewTugasanModal({ onClose, onCreate }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.caseRef || !form.officer || !form.title || !form.instruction || !form.deadline) {
+    if (!form.caseRef || !form.officer || !form.instruction || !form.deadline) {
       alert("Sila lengkapkan semua maklumat tugasan sebelum menghantar.");
       return;
     }
@@ -74,27 +74,21 @@ function NewTugasanModal({ onClose, onCreate }) {
                   <option key={c.ref} value={c.ref}>{c.ref} — {c.title}</option>
                 ))}
               </select>
+              {availableCases.length === 0 && (
+                <div style={{ fontSize: "11px", color: "var(--text-soft)", marginTop: "4px" }}>
+                  Tiada kes yang menunggu tugasan buat masa ini.
+                </div>
+              )}
             </div>
 
             <div className="form-group">
               <label className="form-label">Pegawai Penyedia Laporan<span className="required">*</span></label>
               <select className="form-select" value={form.officer} onChange={update("officer")}>
                 <option value="">— Pilih pegawai —</option>
-                {officerList.map((name) => (
-                  <option key={name} value={name}>{name}</option>
+                {officerList.map((o) => (
+                  <option key={o.userID} value={o.userID}>{o.name}</option>
                 ))}
               </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Tajuk Tugasan<span className="required">*</span></label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Contoh: Lawatan Tapak & Penilaian Kerosakan Struktur"
-                value={form.title}
-                onChange={update("title")}
-              />
             </div>
 
             <div className="form-group">
@@ -145,21 +139,21 @@ function NewTugasanModal({ onClose, onCreate }) {
   );
 }
 
-/* ─── Modal: Lihat & Urus Tugasan (Kotak Tarikh Akhir Dibuang) ─── */
-function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
+/* ─── Modal: Lihat & Urus Tugasan ─── */
+function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate, officerList }) {
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState(null);
 
   if (!tugasan) return null;
 
-  const isSedangDiproses = tugasan.status === "Sedang Diproses";
+  const isSedangDiproses = tugasan.status !== "Selesai";
   const isSelesai = tugasan.status === "Selesai";
 
   const handleEditOpen = () => {
     setEditForm({
-      officer: tugasan.officer,
+      officer: tugasan.officerID,
       instruction: tugasan.instruction,
-      deadline: tugasan.deadlineRaw || tugasan.deadline,
+      deadline: tugasan.deadlineRaw,
       priority: tugasan.priority,
     });
     setEditMode(true);
@@ -170,13 +164,13 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
       alert("Sila lengkapkan semua maklumat.");
       return;
     }
-    onUpdate(tugasan.caseRef, tugasan.officer, tugasan.dateGiven, editForm);
+    onUpdate(tugasan.id, tugasan.caseRef, editForm);
     setEditMode(false);
   };
 
   const handleRemove = () => {
     if (window.confirm(`Anda pasti mahu membatalkan tugasan kes ${tugasan.caseRef}?`)) {
-      onRemove(tugasan.caseRef, tugasan.officer, tugasan.dateGiven);
+      onRemove(tugasan.id);
       onClose();
     }
   };
@@ -241,27 +235,25 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
                 </div>
               </div>
 
-              {/* ─── 📌 SEKSYEN LAPORAN YANG DIHANTAR SEMULA OLEH PPL ─── */}
               {isSelesai && (
                 <div style={{
-                  marginTop: "18px", padding: "16px", background: "#f0fdf4", 
+                  marginTop: "18px", padding: "16px", background: "#f0fdf4",
                   border: "1px solid #bbf7d0", borderRadius: "var(--radius-md, 6px)"
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
                     <span style={{
-                      fontSize: "10px", fontWeight: "bold", background: "#16a34a", 
+                      fontSize: "10px", fontWeight: "bold", background: "#16a34a",
                       color: "white", padding: "2px 6px", borderRadius: "4px"
                     }}>TERIMA</span>
                     <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#14532d" }}>
                       Hasil Laporan &amp; Bukti Lapangan (PPL)
                     </div>
                   </div>
-                  
+
                   <p style={{ fontSize: "12px", color: "#166534", lineHeight: "1.5", margin: "0 0 12px 0" }}>
                     Pegawai Penyedia Laporan (<strong>{tugasan.officer}</strong>) telah melengkapkan tugasan siasatan dan memuat naik dokumen maklum balas akhir.
                   </p>
 
-                  {/* Kad Muat Turun Fail */}
                   <div style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between",
                     background: "white", padding: "10px 14px", borderRadius: "6px",
@@ -279,8 +271,8 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
                         <div style={{ fontSize: "10.5px", color: "var(--text-soft)" }}>Dokumen PDF &bull; Selesai Dihantar</div>
                       </div>
                     </div>
-                    
-                    <button 
+
+                    <button
                       onClick={() => alert("Memulakan muat turun fail laporan...")}
                       style={{
                         display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "11.5px",
@@ -304,8 +296,8 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
               <div className="form-group">
                 <label className="form-label">Pegawai Penyedia Laporan<span className="required">*</span></label>
                 <select className="form-select" value={editForm.officer} onChange={update("officer")}>
-                  {officerList.map((name) => (
-                    <option key={name} value={name}>{name}</option>
+                  {officerList.map((o) => (
+                    <option key={o.userID} value={o.userID}>{o.name}</option>
                   ))}
                 </select>
               </div>
@@ -378,12 +370,59 @@ function ViewTugasanModal({ tugasan, onClose, onRemove, onUpdate }) {
    MAIN PAGE — Pengagihan Tugasan
    ════════════════════════════════════════════════════════════════ */
 export default function KBPengagihanTugasan() {
-  const [tugasanList, setTugasanList] = useState(
-    initialTugasanList.map((t, i) => ({ ...t, _key: i }))
-  );
+  const [tugasanList, setTugasanList] = useState([]);
+  const [availableCases, setAvailableCases] = useState([]);
+  const [officerList, setOfficerList] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showNewModal, setShowNewModal] = useState(false);
   const [viewingTugasan, setViewingTugasan] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const loadData = () => {
+    setLoading(true);
+    Promise.all([
+      fetch(`http://localhost:5000/api/document-departments`).then((r) => r.json()),
+      fetch(`http://localhost:5000/api/users?role=PegawaiPenyediaLaporan`).then((r) => r.json()),
+    ])
+      .then(([assignments, officers]) => {
+        const deptRows = assignments.filter((a) => a.deptID === DEPT_ID);
+
+        setAvailableCases(
+          deptRows
+            .filter((a) => !a.assignedOfficer)
+            .map((a) => ({ ref: a.refNo, title: a.title }))
+        );
+
+        setTugasanList(
+          deptRows
+            .filter((a) => a.assignedOfficer)
+            .map((a) => ({
+              id: a.id,
+              caseRef: a.refNo,
+              caseTitle: a.title,
+              officerID: a.assignedOfficer,
+              officer: a.officerName || "—",
+              instruction: a.instruction || "",
+              dateGiven: formatDate(a.assignedAt),
+              deadline: formatDate(a.deadline),
+              deadlineRaw: toDateInput(a.deadline),
+              priority: a.priority,
+              status: a.reportStatus === "Diluluskan" ? "Selesai" : "Sedang Diproses",
+            }))
+        );
+
+        setOfficerList(officers);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Gagal ambil data tugasan:", err);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const filteredList = tugasanList.filter((t) => {
     const q = searchQuery.toLowerCase();
@@ -394,50 +433,79 @@ export default function KBPengagihanTugasan() {
     );
   });
 
-  const handleCreateTugasan = (form) => {
-    const caseInfo = availableCases.find((c) => c.ref === form.caseRef);
-    const newEntry = {
-      caseRef: form.caseRef,
-      caseTitle: caseInfo?.title || form.title,
-      officer: form.officer,
-      instruction: form.instruction,
-      priority: form.priority,
-      dateGiven: new Date().toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }),
-      deadline: new Date(form.deadline).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }),
-      deadlineRaw: form.deadline,
-      status: "Sedang Diproses",
-      _key: Date.now(),
-    };
-    setTugasanList((prev) => [newEntry, ...prev]);
-    setShowNewModal(false);
+  // --- Pagination ---
+  const ITEMS_PER_PAGE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery]);
+  const totalPages = Math.max(1, Math.ceil(filteredList.length / ITEMS_PER_PAGE));
+  const paginatedList = filteredList.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handleCreateTugasan = async (form) => {
+    const rowMatch = availableCases.find((c) => c.ref === form.caseRef);
+    if (!rowMatch) return;
+
+    try {
+      // Cari id row DocumentDepartment untuk refNo+deptID ni
+      const res = await fetch(`http://localhost:5000/api/document-departments?refNo=${encodeURIComponent(form.caseRef)}`);
+      const rows = await res.json();
+      const target = rows.find((r) => r.deptID === DEPT_ID);
+      if (!target) {
+        alert("Ralat: rekod tugasan tidak dijumpai.");
+        return;
+      }
+
+      await fetch(`http://localhost:5000/api/document-departments/${target.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignedOfficer: form.officer, instruction: form.instruction }),
+      });
+
+      await fetch(`http://localhost:5000/api/documents/${encodeURIComponent(form.caseRef)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deadline: form.deadline, priority: form.priority }),
+      });
+
+      setShowNewModal(false);
+      loadData();
+    } catch (err) {
+      console.error("Ralat sambungan:", err);
+      alert("Gagal menghantar tugasan — sila cuba semula.");
+    }
   };
 
-  const matchEntry = (t, caseRef, officer, dateGiven) =>
-    t.caseRef === caseRef && t.officer === officer && t.dateGiven === dateGiven;
-
-  const handleRemoveTugasan = (caseRef, officer, dateGiven) => {
-    setTugasanList((prev) => prev.filter((t) => !matchEntry(t, caseRef, officer, dateGiven)));
+  const handleRemoveTugasan = async (id) => {
+    try {
+      await fetch(`http://localhost:5000/api/document-departments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignedOfficer: null, instruction: null }),
+      });
+      loadData();
+    } catch (err) {
+      console.error("Ralat sambungan:", err);
+    }
   };
 
-  const handleUpdateTugasan = (caseRef, officer, dateGiven, editForm) => {
-    setTugasanList((prev) =>
-      prev.map((t) => {
-        if (!matchEntry(t, caseRef, officer, dateGiven)) return t;
-        const newDeadline = new Date(editForm.deadline).toLocaleDateString("ms-MY", {
-          day: "2-digit", month: "short", year: "numeric",
-        });
-        const updated = {
-          ...t,
-          officer: editForm.officer,
-          instruction: editForm.instruction,
-          priority: editForm.priority,
-          deadline: newDeadline,
-          deadlineRaw: editForm.deadline,
-        };
-        setViewingTugasan(updated);
-        return updated;
-      })
-    );
+  const handleUpdateTugasan = async (id, refNo, editForm) => {
+    try {
+      await fetch(`http://localhost:5000/api/document-departments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignedOfficer: editForm.officer, instruction: editForm.instruction }),
+      });
+
+      await fetch(`http://localhost:5000/api/documents/${encodeURIComponent(refNo)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deadline: editForm.deadline, priority: editForm.priority }),
+      });
+
+      setViewingTugasan(null);
+      loadData();
+    } catch (err) {
+      console.error("Ralat sambungan:", err);
+    }
   };
 
   return (
@@ -495,7 +563,9 @@ export default function KBPengagihanTugasan() {
             <div>
               <div className="table-panel-title">Senarai Tugasan</div>
               <div className="table-panel-sub">
-                {searchQuery
+                {loading
+                  ? "Memuatkan..."
+                  : searchQuery
                   ? `${filteredList.length} hasil untuk "${searchQuery}"`
                   : `Menunjukkan ${tugasanList.length} tugasan yang telah diagihkan`}
               </div>
@@ -530,8 +600,8 @@ export default function KBPengagihanTugasan() {
                     <td colSpan={7} className="td-empty">Tiada tugasan ditemui.</td>
                   </tr>
                 ) : (
-                  filteredList.map((t) => (
-                    <tr key={t._key}>
+                  paginatedList.map((t) => (
+                    <tr key={t.id}>
                       <td className="td-ref">{t.caseRef}</td>
                       <td>
                         <div className="td-tajuk">{t.caseTitle}</div>
@@ -554,17 +624,24 @@ export default function KBPengagihanTugasan() {
               </tbody>
             </table>
           </div>
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </div>
       </div>
 
       {showNewModal && (
-        <NewTugasanModal onClose={() => setShowNewModal(false)} onCreate={handleCreateTugasan} />
+        <NewTugasanModal
+          onClose={() => setShowNewModal(false)}
+          onCreate={handleCreateTugasan}
+          availableCases={availableCases}
+          officerList={officerList}
+        />
       )}
       <ViewTugasanModal
         tugasan={viewingTugasan}
         onClose={() => setViewingTugasan(null)}
         onRemove={handleRemoveTugasan}
         onUpdate={handleUpdateTugasan}
+        officerList={officerList}
       />
     </>
   );

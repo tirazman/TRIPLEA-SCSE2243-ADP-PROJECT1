@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Navbar from "../../components/common/navbar";
-import { PTSubmissionList } from "../../data/PTSubmissionList";
-import "../../styles/pages/PTPendaftaranFail.css"; 
+import Pagination from "../../components/common/Pagination";
+import "../../styles/pages/PTPendaftaranFail.css";
 
 /* ─── System Overlay Modal ─── */
 function SystemModal({ show, isSuccess, title, desc }) {
@@ -78,15 +78,39 @@ function RecordDetailModal({ record, onClose }) {
   );
 }
 
+const currentPTUserID = () => JSON.parse(localStorage.getItem("user") || "{}").userID || "U003";
+
 export default function PTPendaftaranFail() {
   const [view, setView] = useState("list");
-  // Tukar status lalai "Direkodkan"/"Disemak" kepada "Dalam Tindakan"
-  const [submissions, setSubmissions] = useState(() =>
-    PTSubmissionList.map(item => ({
-      ...item,
-      status: item.status === "Direkodkan" || item.status === "Disemak" ? "Dalam Tindakan" : item.status
-    }))
-  );
+  const [submissions, setSubmissions] = useState([]);
+  const [loadingList, setLoadingList] = useState(true);
+
+  const loadSubmissions = () => {
+    setLoadingList(true);
+    fetch(`http://localhost:5000/api/documents`)
+      .then((res) => res.json())
+      .then((data) => {
+        setSubmissions(
+          data.map((d) => ({
+            ref: d.refNo,
+            title: d.title,
+            dueDate: d.deadline ? d.deadline.split("T")[0] : "",
+            date: d.submissionDate ? new Date(d.submissionDate).toLocaleDateString("ms-MY", { day: "2-digit", month: "short", year: "numeric" }) : "-",
+            status: d.status,
+            fileUrl: null,
+          }))
+        );
+        setLoadingList(false);
+      })
+      .catch((err) => {
+        console.error("Gagal ambil senarai dokumen:", err);
+        setLoadingList(false);
+      });
+  };
+
+  useEffect(() => {
+    loadSubmissions();
+  }, []);
 
   // Form States
   const [formData, setFormData] = useState({ title: "", notes: "", dueDate: "" });
@@ -103,6 +127,11 @@ export default function PTPendaftaranFail() {
   // --- UC105: Search & Retrieve Case Records States ---
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRecord, setSelectedRecord] = useState(null);
+
+  // --- Pagination ---
+  const ITEMS_PER_PAGE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, submissions.length]);
 
   // --- Utility Functions ---
   const showToast = (title, message, type = "success") => {
@@ -170,7 +199,7 @@ export default function PTPendaftaranFail() {
   };
 
   // --- Form Submission (UC102 & UC103) ---
-  const handleSubmitForm = (e) => {
+  const handleSubmitForm = async (e) => {
     e.preventDefault();
 
     if (!formData.title.trim() || !file) {
@@ -181,33 +210,43 @@ export default function PTPendaftaranFail() {
     setIsSubmitting(true);
     showModal("Menjana Nombor Rujukan...", "Mendaftarkan dokumen dengan selamat ke dalam Pangkalan Data Utama...");
 
-    // Simulate Registration & Reference Generation (2.0s)
-    setTimeout(() => {
-      const rawak = Math.floor(1000 + Math.random() * 9000);
-      const siriRujukan = `PDK/KLG/2026/${rawak}`;
-      const today = new Date().toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+    try {
+      const res = await fetch(`http://localhost:5000/api/documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formData.title.trim(),
+          description: formData.notes || null,
+          deadline: formData.dueDate,
+          submittedBy: currentPTUserID(),
+        }),
+      });
+      const result = await res.json();
 
+      if (!res.ok) {
+        hideModal();
+        setIsSubmitting(false);
+        showToast("Gagal Mendaftar", result.message || "Ralat tidak diketahui", "error");
+        return;
+      }
+
+      const siriRujukan = result.refNo;
       showModal("Berjaya!", `Dokumen berjaya didaftarkan. \nNo. Rujukan: ${siriRujukan}`, true);
 
       setTimeout(() => {
         hideModal();
         setIsSubmitting(false);
         setIsSuccessSubmit(true);
-
-        const newRecord = {
-          ref: siriRujukan,
-          title: formData.title.trim(),
-          dueDate: formData.dueDate,
-          date: today,
-          status: "Dalam Tindakan",
-          fileUrl: null 
-        };
-
-        setSubmissions(prev => [newRecord, ...prev]);
         showToast("Penyerahan Berjaya", `Dokumen berjaya dikemukakan. No. Rujukan: ${siriRujukan}`, "success");
+        loadSubmissions();
         handleBackToList();
       }, 2500);
-    }, 2000);
+    } catch (err) {
+      console.error("Ralat sambungan:", err);
+      hideModal();
+      setIsSubmitting(false);
+      showToast("Ralat Sambungan", "Tidak dapat menghubungi pelayan", "error");
+    }
   };
 
   // --- UC105: Search & Retrieve Case Records ---
@@ -220,6 +259,12 @@ export default function PTPendaftaranFail() {
       item.title.toLowerCase().includes(query)
     );
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredSubmissions.length / ITEMS_PER_PAGE));
+  const paginatedSubmissions = filteredSubmissions.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   // Normal Flow 4: system displays case details and allows viewing the PDF document
   const handleViewRecord = (item) => {
@@ -263,7 +308,7 @@ export default function PTPendaftaranFail() {
               <div className="table-panel-header">
                 <div>
                   <div className="table-panel-title">Pengurusan Rekod Berpusat</div>
-                  <div className="table-panel-sub">Semua data disegerak masa nyata dengan Pangkalan Data</div>
+                  <div className="table-panel-sub">{loadingList ? "Memuatkan..." : "Semua data disegerak masa nyata dengan Pangkalan Data"}</div>
                 </div>
                 {/* UC105 Normal Flow 1-2: record search interface, user enters reference number/criteria */}
                 <div className="search-input-wrap">
@@ -300,7 +345,7 @@ export default function PTPendaftaranFail() {
                       </td>
                     </tr>
                   ) : (
-                    filteredSubmissions.map((item) => (
+                    paginatedSubmissions.map((item) => (
                       <tr key={item.ref}>
                         <td className="td-ref">{item.ref}</td>
                         <td>
@@ -309,7 +354,7 @@ export default function PTPendaftaranFail() {
                         <td className="td-date">{item.date}</td>
                         <td className="td-date">{item.dueDate}</td>
                         <td>
-                          <span className={`status-badge ${item.status === 'Dalam Tindakan' ? 'badge-warning' : 'badge-success'}`}>
+                          <span className={`status-badge ${item.status === 'Selesai' ? 'badge-success' : 'badge-warning'}`}>
                             <div className="badge-dot"></div>
                             {item.status}
                           </span>
@@ -325,6 +370,7 @@ export default function PTPendaftaranFail() {
                   )}
                 </tbody>
               </table>
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
             </div>
           </section>
         ) : (
